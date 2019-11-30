@@ -12,12 +12,6 @@ main.o: main.c include/json.h
 json.o: json.c include/json.h
 	gcc -c json.c $(FLAGS)
 
-array.o: array.c include/array.h
-	gcc -c array.c $(FLAGS)
-
-linkedlist.o: linkedlist.c include/linkedlist.h
-	gcc -c linkedlist.c $(FLAGS)
-
 # Test Code
 TestJson.o: test/TestJson.c 
 	gcc -c test/TestJson.c $(TEST_FLAGS)
