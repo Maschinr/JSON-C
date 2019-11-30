@@ -35,7 +35,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-//TODO change to all c var types and json object and json array and json null, json number should be split into float, int long double and so on
 typedef enum json_value_type_e {
     JSON_STRING,
     JSON_CHAR,// JSON_UNSIGNED_CHAR,
@@ -76,22 +75,34 @@ typedef struct json_array_t {
     json_value* values; // Value array
 } json_array;
 
+//TODO enter all types
+//All compatible types for use as x macro
+//TODO variadic macro where the enum can be any values where casting to is possible? else i would need to do all by hand uff, or second param is function to cast val to string and third for converting that would be possible
+#define JSON_INTERNAL_TYPES\
+    JSON_INTERNAL_MACRO(int, JSON_INT)\
+    JSON_INTERNAL_MACRO(double, JSON_DOUBLE)\
+    JSON_INTERNAL_MACRO(float, JSON_FLOAT)
 
 //JSON OBJECT FUNCTIONS
 extern json_object* json_object_create(void);//Empty json object
 extern json_object* json_object_from_file(const char* path); //Try to load json object from file, fails if parse error or the main context is not an object(first char is not '{')
 extern json_object* json_object_from_str(const char* str);
+//TODO implement formatting
 extern void json_object_to_file(const json_object* object, const char* path, int formatted);
 extern char* json_object_to_str(const json_object* object, int formatted);
 extern void json_object_free(json_object* object); // Free the json_object struct
 
-//int
-extern int json_object_get_int(const json_object* object, const char* name, int* result);
-extern int json_object_add_int(json_object* object, const char* name, int value); // Adds only if non existent if existent return -1
-extern void json_object_insert_int(const json_object* object, const char* name, int value); // Replaces value if it already exists, if not then create it
-extern int json_object_change_int(const json_object* object, const char* name, int value); // Change a value that is already there, if not then return -1
+#define JSON_INTERNAL_MACRO(type, type_enum)\
+    extern int json_object_get_##type(const json_object* object, const char* name, type *result);\
+    extern int json_object_add_##type(json_object* object, const char* name, const type value);\
+    extern int json_object_insert_##type(json_object* object, const char* name, const type value);\
+    extern int json_object_change_##type(const json_object* object, const char* name, const type value); 
 
-extern void json_object_remove(const json_object* object, const char* name); // Remove a value from the object
+JSON_INTERNAL_TYPES
+
+#undef JSON_INTERNAL_MACRO
+
+extern int json_object_remove(json_object* object, const char* name); // Remove a value from the object
 
 
 //JSON ARRAY FUNCTIONS
@@ -101,13 +112,21 @@ extern json_array* json_array_load_from_str(const char* str);
 
 extern const int json_array_get_int(const json_array* array, const unsigned int position);
 
-//GENERIC INTERFACES
+//GENERIC INTERFACES need to be written by hand because nested macros are not evaluated aarrg
 #define json_object_get(object, name, result) _Generic((result),\
     int*: json_object_get_int\
 ) (object, name, result)
 
 #define json_object_add(object, name, value) _Generic((value),\
     int: json_object_add_int\
+) (object, name, value)
+
+#define json_object_insert(object, name, value) _Generic((value),\
+    int: json_object_insert_int\
+) (object, name, value)
+
+#define json_object_change(object, name, value) _Generic((value),\
+    int: json_object_change_int\
 ) (object, name, value)
 
 #endif

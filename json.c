@@ -40,7 +40,6 @@ json_object_value* json_object_value_create(const char* name, void* data, json_v
         return NULL;
     }
 
-
     result = malloc(sizeof(json_object_value));
 
     if(result == NULL) {
@@ -149,7 +148,7 @@ char* json_object_value_to_str(json_object_value* value) {
     return result;
 }
 
-//TODO work on this, implement formatting make it more functional so that json_object from str and so can also use the while loop content and implement all types
+//TODO work on this, implement formatting, implement all types
 char* json_object_to_str(const json_object* object, int formatted) {
     char* result;
     json_object_value* element;
@@ -227,85 +226,174 @@ void json_object_free(json_object* object) {
     free(object);
 }
 
-int json_object_get_int(const json_object* object, const char* name, int* result) {
+int json_object_get_value(const json_object* object, const char* name, json_object_value** result) {
+    if(object == NULL) {
+        return -1;
+    }
+
+    (*result) = object->first;
+    while((*result) != NULL) {
+        if(strcmp((*result)->name, name) == 0) {
+            return 0;
+        }
+
+        *result = (*result)->next;
+    }
+
+    return -1;
+}
+
+int json_object_remove(json_object* object, const char* name) {
     json_object_value* element;
-    *result = 0;
+    json_object_value* last_element;
 
     if(object == NULL) {
         return -1;
     }
-    
+
     element = object->first;
+    last_element = NULL;
 
     while(element != NULL) {
         if(strcmp(element->name, name) == 0) {
+            //Element found delete it and set last_element next to null if last element is not null, otherwise set object first to null
+            free(element);
 
-            if(element->value == NULL) {
-                return -1;
+            if(last_element != NULL) {
+                last_element->next = NULL;
+            } else {
+                object->first = NULL;
             }
-
-            if(element->value->type != JSON_INT) {
-                return -1;
-            }
-
-            //TODO irrelevant?
-            if(sizeof(result) != element->value->byte_size) {
-                return -1;
-            }
-
-            memcpy(result, element->value->value, element->value->byte_size);
 
             return 0;
         }
+
+        last_element = element;
         element = element->next;
     }
 
     return -1;
 }
 
-int json_object_add_int(json_object* object, const char* name, int value) {
-    json_object_value* element;
-    json_object_value* last_element;
-    int* data;
-
-    if(object == NULL) {
-        return -1;
+//Implementation for types
+#define JSON_INTERNAL_MACRO(m_type, m_type_enum)\
+    int json_object_get_##m_type(const json_object* object, const char* name, m_type *result) {\
+        json_object_value* element;\
+\
+        if(object == NULL || result == NULL) {\
+            return -1;\
+        }\
+\
+        element = NULL;\
+        *result = 0;\
+\
+        if(json_object_get_value(object, name, &element) == 0) {\
+\
+            if(element->value == NULL) {\
+                return -1;\
+            }\
+\
+            if(element->value->type != m_type_enum) {\
+                return -1;\
+            }\
+\
+            if(sizeof(result) != element->value->byte_size) {\
+                return -1;\
+            }\
+\
+            memcpy(result, element->value->value, element->value->byte_size);\
+\
+            return 0;\
+        }\
+        return -1;\
+    }\
+\
+    int json_object_add_##m_type(json_object* object, const char* name, const m_type value) {\
+        json_object_value* element;\
+        json_object_value* last_element;\
+        int* data;\
+        m_type tmp;\
+\
+        if(object == NULL) {\
+            return -1;\
+        }\
+\
+        if(json_object_get_##m_type(object, name, &tmp) == 0) {\
+            return -1;\
+        }\
+\
+        data = malloc(sizeof(m_type));\
+\
+        if(data == NULL) {\
+            return -1;\
+        }\
+\
+        *data = value;\
+        if(object->first == NULL) {\
+            object->first = json_object_value_create(name, data, m_type_enum);\
+            if(object->first == NULL) {\
+                free(data);\
+                return -1;\
+            }\
+            return 0;\
+        }\
+        element = object->first;\
+        last_element = NULL;\
+\
+        while(element != NULL) {\
+            if(strcmp(element->name, name) == 0) {\
+                return -1;\
+            }\
+            last_element = element;\
+            element = element->next;\
+        }\
+\
+        last_element->next = json_object_value_create(name, data, m_type_enum);\
+        if(last_element->next == NULL) {\
+            free(data);\
+            return -1;\
+        }\
+        return 0;\
+    }\
+\
+    int json_object_insert_##m_type(json_object* object, const char* name, const m_type value) {\
+\
+        if(json_object_add_##m_type(object, name, value) != 0) {\
+            return json_object_change_##m_type(object, name, value);\
+        }\
+\
+        return 0;\
+    }\
+\
+    int json_object_change_##m_type(const json_object* object, const char* name, const m_type value) {\
+        json_object_value* element;\
+\
+        if(object == NULL) {\
+            return -1;\
+        }\
+\
+        if(json_object_get_value(object, name, &element) == 0) {\
+\
+            if(element->value == NULL) {\
+                return -1;\
+            }\
+\
+            if(element->value->type != m_type_enum) {\
+                return -1;\
+            }\
+\
+            if(sizeof(value) != element->value->byte_size) {\
+                return -1;\
+            }\
+\
+            memcpy(element->value->value, &value, element->value->byte_size);\
+\
+            return 0;\
+        }\
+\
+        return -1;\
     }
 
-    data = malloc(sizeof(int));
+JSON_INTERNAL_TYPES
 
-    if(data == NULL) {
-        return -1;
-    }
-
-    *data = value;
-
-    if(object->first == NULL) {
-        object->first = json_object_value_create(name, data, JSON_INT);
-        if(object->first == NULL) {
-            free(data);
-            return -1;
-        }
-        return 0;
-    }
-    
-    element = object->first;
-    last_element = NULL;
-
-    while(element != NULL) {
-        if(strcmp(element->name, name) == 0) {
-            return -1; //Key already in object
-        }
-        last_element = element;
-        element = element->next;
-    }
-
-    //Append new element
-    last_element->next = json_object_value_create(name, data, JSON_INT);
-    if(last_element->next == NULL) {
-        free(data);
-        return -1;
-    }
-
-    return 0;
-}
+#undef JSON_INTERNAL_MACRO
