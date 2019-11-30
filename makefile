@@ -20,9 +20,10 @@ unity.o: third-party/unity.c third-party/unity.h
 	gcc -c third-party/unity.c $(TEST_FLAGS)
 
 test: TestJson.o json.o unity.o 
-	gcc -o test json.o TestJson.o unity.o -Wall 
-	./test
+	gcc -o json_test json.o TestJson.o unity.o -Wall 
+	./json_test
 
 clear:
 	del *.o
 	del out.exe
+	del json_test.exe
