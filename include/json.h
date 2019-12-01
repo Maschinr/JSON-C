@@ -88,15 +88,15 @@ extern json_object* json_object_create(void);//Empty json object
 extern json_object* json_object_from_file(const char* path); //Try to load json object from file, fails if parse error or the main context is not an object(first char is not '{')
 extern json_object* json_object_from_str(const char* str);
 //TODO implement formatting
-extern void json_object_to_file(const json_object* object, const char* path, int formatted);
+extern int json_object_to_file(const json_object* object, const char* path, int formatted);
 extern char* json_object_to_str(const json_object* object, int formatted);
 extern void json_object_free(json_object* object); // Free the json_object struct
 
-#define JSON_INTERNAL_MACRO(type, type_enum)\
-    extern int json_object_get_##type(const json_object* object, const char* name, type *result);\
-    extern int json_object_add_##type(json_object* object, const char* name, const type value);\
-    extern int json_object_insert_##type(json_object* object, const char* name, const type value);\
-    extern int json_object_change_##type(const json_object* object, const char* name, const type value); 
+#define JSON_INTERNAL_MACRO(m_type, m_type_enum)\
+    extern int json_object_get_##m_type(const json_object* object, const char* name, m_type *result);\
+    extern int json_object_add_##m_type(json_object* object, const char* name, const m_type value);\
+    extern int json_object_insert_##m_type(json_object* object, const char* name, const m_type value);\
+    extern int json_object_change_##m_type(const json_object* object, const char* name, const m_type value); 
 
 JSON_INTERNAL_TYPES
 

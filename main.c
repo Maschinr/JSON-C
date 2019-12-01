@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
     json_object_get(json, "test2", &test2);
   
     char* json_text = json_object_to_str(json, 0);
-    printf("%s %u\n", json_text, strlen(json_text));
+    printf("%s %lu\n", json_text, strlen(json_text));
     free(json_text);
 
     if(json_object_change(json, "test", 302) != 0) {
@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
     }
 
     json_text = json_object_to_str(json, 0);
-    printf("%s %u\n", json_text, strlen(json_text));
+    printf("%s %lu\n", json_text, strlen(json_text));
     free(json_text);
 
     if(json_object_remove(json, "test") != 0) {
@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
     }
 
     json_text = json_object_to_str(json, 0);
-    printf("%s %u\n", json_text, strlen(json_text));
+    printf("%s %lu\n", json_text, strlen(json_text));
     free(json_text);
 
     json_object_free(json);

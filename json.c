@@ -256,14 +256,15 @@ int json_object_remove(json_object* object, const char* name) {
 
     while(element != NULL) {
         if(strcmp(element->name, name) == 0) {
-            //Element found delete it and set last_element next to null if last element is not null, otherwise set object first to null
-            free(element);
+            //Element found delete it and set last_element next to element next if last element is not null, otherwise set object first to null
 
             if(last_element != NULL) {
-                last_element->next = NULL;
+                last_element->next = element->next;
             } else {
                 object->first = NULL;
             }
+
+            free(element);
 
             return 0;
         }
