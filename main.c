@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
         printf("Error getting int2\n");
     }
 
-    printf("%f %i\n", test, test2);
+    printf("%g %i\n", test, test2);
 
     char* json_text = json_object_to_str(json, 0);
     printf("%s %lu\n", json_text, strlen(json_text));
@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
         printf("Error getting int2\n");
     }
 
-    printf("%f %i\n", test, test2);
+    printf("%g %i\n", test, test2);
 
     json_text = json_object_to_str(json, 0);
     printf("%s %lu\n", json_text, strlen(json_text));

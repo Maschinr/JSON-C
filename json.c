@@ -117,9 +117,9 @@ json_object* json_object_from_str(const char* str) {
 
 
 #define CONVERT_TO(to, from)\
-    to res = (to)*(from*)value->value;\
+    {to res = (to)*(from*)value->value;\
     memcpy(result, &res, sizeof(to));\
-    return result;
+    return result;}
 //try to convert value to type and return it if possible, the caller then casts it
 void* json_value_convert(json_value* value, json_value_type type) {
     void* result;
@@ -192,13 +192,8 @@ void* json_value_convert(json_value* value, json_value_type type) {
                     return result;
                 }
 
-                case JSON_FLOAT: {
-                    CONVERT_TO(int, float)
-                }
-
-                case JSON_DOUBLE: {
-                    CONVERT_TO(int, double)
-                }
+                case JSON_FLOAT: CONVERT_TO(int, float)
+                case JSON_DOUBLE: CONVERT_TO(int, double)
 
                 default: {
                     test_free(result);
@@ -212,18 +207,14 @@ void* json_value_convert(json_value* value, json_value_type type) {
         case JSON_FLOAT: { // convert to float
             result = test_malloc(sizeof(float));
             switch(value->type) {
-                case JSON_INT: {
-                    CONVERT_TO(float, int)
-                }
 
                 case JSON_FLOAT: {
                     memcpy(result, value->value, sizeof(float));
                     return result;
                 }
 
-                case JSON_DOUBLE: {
-                    CONVERT_TO(float, double)
-                }
+                case JSON_INT: CONVERT_TO(float, int)
+                case JSON_DOUBLE: CONVERT_TO(float, double)
 
                 default: {
                     test_free(result);
@@ -238,18 +229,14 @@ void* json_value_convert(json_value* value, json_value_type type) {
         case JSON_DOUBLE: { // convert to double
             result = test_malloc(sizeof(double));
             switch(value->type) {
-                case JSON_INT: {
-                    CONVERT_TO(double, int)
-                }
-
-                case JSON_FLOAT: {
-                    CONVERT_TO(double, float)
-                }
-
+                
                 case JSON_DOUBLE: {
                     memcpy(result, value->value, sizeof(double));
                     return result;
                 }
+
+                case JSON_INT: CONVERT_TO(double, int)
+                case JSON_FLOAT: CONVERT_TO(double, float)
 
                 default: {
                     test_free(result);
@@ -262,7 +249,7 @@ void* json_value_convert(json_value* value, json_value_type type) {
         }
 
         default: {
-            return NULL;;
+            return NULL;
         }
     }
 
