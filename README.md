@@ -1,28 +1,27 @@
 # JSON-C(to be changed)
-# TODO link the mentioning of other paragraphs with https://github.com/Maschinr/JSON-C#nesting-json_objects-in-json_objects for example
 ## Content
-- Introduction
-- How to use
-    -  Reading a json_object from a string and printing it to the command line
-    - Creating a new json_object, adding values and printing it to the command line
-    - Retrieving values of a JSON string
-    - Nesting json_objects in json_objects
-- Conversion Table (TODO)
-- JSON Object Functions
-    - json_object_create
-    - json_object_free
-    - json_object_from_file
-    - json_object_from_str
-    - json_object_to_file
-    - json_object_to_str
-    - json_object_get_*type*
-    - json_object_add_*type*
-    - json_object_insert_*type*
-    - json_object_remove
-- JSON Array Functions (TODO)
-- Generic Functions
-    - Using Generic Functions
-- Test's
+- [Introduction](https://github.com/Maschinr/JSON-C#introduction)
+- [How to use](https://github.com/Maschinr/JSON-C#how-to-use)
+    - [Reading a json_object from a string and printing it to the command line](https://github.com/Maschinr/JSON-C#reading-a-json_object-from-a-string-and-printing-it-to-the-command-line)
+    - [Creating a new json_object, adding values and printing it to the command line](https://github.com/Maschinr/JSON-C#creating-a-new-json_object-adding-values-and-printing-it-to-the-command-line)
+    - [Retrieving values of a JSON string](https://github.com/Maschinr/JSON-C#retrieving-values-of-a-json-string)
+    - [Nesting json_objects in json_objects](https://github.com/Maschinr/JSON-C#nesting-json_objects-in-json_objects)
+- [Conversion Table (TODO)](https://github.com/Maschinr/JSON-C#conversion-table-todo)
+- [JSON Object Functions](https://github.com/Maschinr/JSON-C#json-object-functions)
+    - [json_object_create](https://github.com/Maschinr/JSON-C#json_object-json_object_createvoid)
+    - [json_object_free](https://github.com/Maschinr/JSON-C#void-json_object_freejson_object-object)
+    - [json_object_from_file](https://github.com/Maschinr/JSON-C#json_object-json_object_from_fileconst-char-path)
+    - [json_object_from_str](https://github.com/Maschinr/JSON-C#json_object-json_object_from_strconst-char-str)
+    - [json_object_to_file](https://github.com/Maschinr/JSON-C#int-json_object_to_fileconst-json_object-object-const-char-path-int-formatted)
+    - [json_object_to_str](https://github.com/Maschinr/JSON-C#char-json_object_to_strconst-json_object-object-int-formatted)
+    - [json_object_get_*type*](https://github.com/Maschinr/JSON-C#int-json_object_get_typeconst-json_object-object-const-char-name-type-result)
+    - [json_object_add_*type*](https://github.com/Maschinr/JSON-C#int-json_object_add_typeconst-json_object-object-const-char-name-const-type-value)
+    - [json_object_insert_*type*](https://github.com/Maschinr/JSON-C#int-json_object_insert_typeconst-json_object-object-const-char-name-const-type-value)
+    - [json_object_remove](https://github.com/Maschinr/JSON-C#int-json_object_removejson_object-object-const-char-name)
+- [JSON Array Functions (TODO)](https://github.com/Maschinr/JSON-C#json-array-functions-todo)
+- [Generic Functions](https://github.com/Maschinr/JSON-C#generic-functions-if-c11-compiled)
+    - [Using Generic Functions](https://github.com/Maschinr/JSON-C#using-generic-functions)
+- [Test's](https://github.com/Maschinr/JSON-C#tests)
 
 ## Introduction
 
@@ -110,7 +109,7 @@ if(object != NULL) {
         //Successfully retrieved value
         printf("float is: %f\n", test2);
     }
-    //Get "float" as int Note: Automatic conversion of types works for many values, look in the table further down to see which are possible
+    //Get "float" as int Note: Automatic conversion of types works for many values, look at "https://github.com/Maschinr/JSON-C#conversion-table-todo" for further details
     if(json_object_get_int(object, "float", &test) == 0) {
         //Successfully retrieved value
         printf("float as integer is: %i\n", test);
@@ -137,7 +136,7 @@ if(object != NULL) {
     object2 = json_object_create();
     if(object2 != NULL) {
         //Note: it's safe to delete object2 here because adding copies the object and it's content
-        if(json_object_add_string(object, "answer", "it work's") != 0) {
+        if(json_object_add_string(object2, "answer", "it work's") != 0) {
             //Error adding value to object
         }
         if(json_object_add_object(object, "nested", object2) != 0) {
@@ -287,7 +286,7 @@ if(object != NULL) {
         //Successfully retrieved value
         printf("float is: %f\n", test2);
     }
-    //Added a new value with the name string with the content "Hello World"
+    //Added a new value with the name "string" with the content "Hello World"
     if(json_object_add(object, "string", "Hello World") == 0) {
         //Successfully added value
     }
