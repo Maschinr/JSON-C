@@ -75,6 +75,8 @@ typedef struct json_array_t {
     json_value* values; // Value array
 } json_array;
 
+extern void TMP_DELETE();
+
 //TODO enter all types
 //All compatible types for use as x macro
 //TODO variadic macro where the enum can be any values where casting to is possible? else i would need to do all by hand uff, or second param is function to cast val to string and third for converting that would be possible
@@ -119,15 +121,21 @@ extern const int json_array_get_int(const json_array* array, const unsigned int 
 ) (object, name, result)
 
 #define json_object_add(object, name, value) _Generic((value),\
-    int: json_object_add_int\
+    int: json_object_add_int,\
+    float: json_object_add_float,\
+    double: json_object_add_double\
 ) (object, name, value)
 
 #define json_object_insert(object, name, value) _Generic((value),\
-    int: json_object_insert_int\
+    int: json_object_insert_int,\
+    float: json_object_insert_float,\
+    double: json_object_insert_double\
 ) (object, name, value)
 
 #define json_object_change(object, name, value) _Generic((value),\
-    int: json_object_change_int\
+    int: json_object_change_int,\
+    float: json_object_change_float,\
+    double: json_object_change_double\
 ) (object, name, value)
 
 #endif

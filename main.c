@@ -2,7 +2,7 @@
 #include <json.h>
 
 int main(int argc, char** argv) {
-    float test;
+    double test;
     int test2;
     json_object* json;
     //json = json_object_load_from_str("{\"test\":10}");
@@ -30,9 +30,19 @@ int main(int argc, char** argv) {
     printf("%s %lu\n", json_text, strlen(json_text));
     free(json_text);
 
-    if(json_object_change(json, "test", 302) != 0) {
+    if(json_object_change(json, "test", -102.90341f) != 0) {
         printf("Error changing test\n");
     }
+
+    if(json_object_get(json, "test", &test) != 0) {
+        printf("Error getting int1\n");
+    }
+
+    if(json_object_get(json, "test", &test2) != 0) {
+        printf("Error getting int2\n");
+    }
+
+    printf("%f %i\n", test, test2);
 
     json_text = json_object_to_str(json, 0);
     printf("%s %lu\n", json_text, strlen(json_text));
@@ -42,11 +52,14 @@ int main(int argc, char** argv) {
         printf("Error removing test\n");
     }
 
-    json_text = json_object_to_str(json, 0);
+    /*json_text = json_object_to_str(json, 0);
     printf("%s %lu\n", json_text, strlen(json_text));
-    free(json_text);
+    free(json_text);*/
 
     json_object_free(json);
+
+    //TODO fix + 3 free because of string, leaking some
+    TMP_DELETE();
 
     return 0;
 }
