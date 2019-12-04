@@ -80,8 +80,8 @@ typedef struct json_array_t {
 //TODO variadic macro where the enum can be any values where casting to is possible? else i would need to do all by hand uff, or second param is function to cast val to string and third for converting that would be possible
 #define JSON_INTERNAL_TYPES\
     JSON_INTERNAL_MACRO(int, JSON_INT)\
+    JSON_INTERNAL_MACRO(float, JSON_FLOAT)\
     JSON_INTERNAL_MACRO(double, JSON_DOUBLE)\
-    JSON_INTERNAL_MACRO(float, JSON_FLOAT)
 
 //JSON OBJECT FUNCTIONS
 extern json_object* json_object_create(void);//Empty json object
@@ -104,7 +104,6 @@ JSON_INTERNAL_TYPES
 
 extern int json_object_remove(json_object* object, const char* name); // Remove a value from the object
 
-
 //JSON ARRAY FUNCTIONS
 /*These work for JSON string and files where the main context is an array, otherwise the return type is null*/
 extern json_array* json_array_load_from_file(const char* path);
@@ -114,7 +113,9 @@ extern const int json_array_get_int(const json_array* array, const unsigned int 
 
 //GENERIC INTERFACES need to be written by hand because nested macros are not evaluated aarrg
 #define json_object_get(object, name, result) _Generic((result),\
-    int*: json_object_get_int\
+    int*: json_object_get_int,\
+    float*: json_object_get_float,\
+    double*: json_object_get_double\
 ) (object, name, result)
 
 #define json_object_add(object, name, value) _Generic((value),\

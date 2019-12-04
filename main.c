@@ -2,7 +2,8 @@
 #include <json.h>
 
 int main(int argc, char** argv) {
-    int test, test2;
+    float test;
+    int test2;
     json_object* json;
     //json = json_object_load_from_str("{\"test\":10}");
     json = json_object_create();
@@ -15,9 +16,16 @@ int main(int argc, char** argv) {
         printf("Error adding int2\n");
     } 
 
-    json_object_get(json, "test", &test);
-    json_object_get(json, "test2", &test2);
-  
+    if(json_object_get(json, "test", &test) != 0) {
+        printf("Error getting int1\n");
+    }
+
+    if(json_object_get(json, "test2", &test2) != 0) {
+        printf("Error getting int2\n");
+    }
+
+    printf("%f %i\n", test, test2);
+
     char* json_text = json_object_to_str(json, 0);
     printf("%s %lu\n", json_text, strlen(json_text));
     free(json_text);

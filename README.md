@@ -1,5 +1,5 @@
-# JSON-(to be changed)
-
+# JSON-C(to be changed)
+# TODO link the mentioning of other paragraphs with https://github.com/Maschinr/JSON-C#nesting-json_objects-in-json_objects for example
 ## Content
 - Introduction
 - How to use
@@ -27,7 +27,7 @@
 ## Introduction
 
 JSON-C(to be changed) is a C99 compatible (with optional C11 features)
-Library for JSON handling in an comfortable way. My Main Focus was not to 
+library for JSON handling in an comfortable way. My Main Focus was not to 
 have the fastest Library there is, but rather a pretty memory secure one with
 an simple to use API. Not focusing on speed doesn't mean that this library
 is particulary slow, just not the fastest. (Benchmarks may come in the future)
@@ -110,7 +110,7 @@ if(object != NULL) {
         //Successfully retrieved value
         printf("float is: %f\n", test2);
     }
-    //Get "float" as int Note: Automatic conversation of types works for many values, look in the table further down to see which are possible
+    //Get "float" as int Note: Automatic conversion of types works for many values, look in the table further down to see which are possible
     if(json_object_get_int(object, "float", &test) == 0) {
         //Successfully retrieved value
         printf("float as integer is: %i\n", test);
