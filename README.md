@@ -17,6 +17,7 @@
     - [json_object_get_*type*](https://github.com/Maschinr/JSON-C#int-json_object_get_typeconst-json_object-object-const-char-name-type-result)
     - [json_object_add_*type*](https://github.com/Maschinr/JSON-C#int-json_object_add_typeconst-json_object-object-const-char-name-const-type-value)
     - [json_object_insert_*type*](https://github.com/Maschinr/JSON-C#int-json_object_insert_typeconst-json_object-object-const-char-name-const-type-value)
+    - [json_object_change_*type*](https://github.com/Maschinr/JSON-C#int-json_object_change_typeconst-json_object-object-const-char-name-const-type-value)
     - [json_object_remove](https://github.com/Maschinr/JSON-C#int-json_object_removejson_object-object-const-char-name)
 - [JSON Array Functions (TODO)](https://github.com/Maschinr/JSON-C#json-array-functions-todo)
 - [Generic Functions](https://github.com/Maschinr/JSON-C#generic-functions-if-c11-compiled)

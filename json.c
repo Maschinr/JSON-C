@@ -1,5 +1,7 @@
 #include <json.h>
 #include <stdio.h>
+#include <ctype.h>
+#include <errno.h>
 
 int created = 0;
 int freed = 0;
@@ -18,7 +20,7 @@ void TMP_DELETE() {
     printf("Created: %i\nFreed: %i\n", created, freed);
 }
 
-json_value* json_value_create(void* data, json_value_type type) {
+json_value* json_value_create(void* data, json_value_type type, const char* name) {
     json_value* result;
 
     result = test_malloc(sizeof(json_value));
@@ -28,8 +30,8 @@ json_value* json_value_create(void* data, json_value_type type) {
     }
 
     result->type = type;
+    result->name = name;
 
-    //TODO cleaner way?
     switch(result->type) {
         case JSON_INT:
             result->byte_size = sizeof(int);
@@ -49,54 +51,6 @@ void json_value_free(json_value* value) {
     test_free(value);
 }
 
-json_object_value* json_object_value_create(const char* name, void* data, json_value_type type) {
-    json_object_value* result;
-    //data needs to be malloced already
-    //TODO check if valid name
-    if(strstr(name, "\"") != NULL) {
-        return NULL;
-    }
-
-    result = test_malloc(sizeof(json_object_value));
-
-    if(result == NULL) {
-        return NULL;
-    }
-
-    result->name = NULL;
-    result->next = NULL;
-    result->value = NULL;
-
-    result->name = test_malloc(sizeof(char) * strlen(name));
-
-    if(result->name == NULL) {
-        test_free(result);
-        return NULL;
-    }
-
-    strcpy(result->name, name);
-
-    result->value = json_value_create(data, type);
-    
-    if(result->value == NULL) {
-        test_free(result->name);
-        test_free(result);
-        return NULL;
-    }
-
-    return result;
-}
-
-void json_object_value_free(json_object_value* value) {
-    if(value == NULL) {
-        return;
-    }
-
-    test_free(value->name);
-    json_value_free(value->value);
-    test_free(value);
-}
-
 json_object* json_object_create(void) {
     json_object* result;
 
@@ -106,15 +60,185 @@ json_object* json_object_create(void) {
         return NULL;
     }
 
-    result->first = NULL;
+    result->map = hashmap_new();
 
     return result;
 }
 
-json_object* json_object_from_str(const char* str) {
-    return NULL;
+int free_hashmap(void* null, void* val) {
+    json_value_free((json_value*)val);
+    return MAP_OK;
 }
 
+void json_object_free(json_object* object) {
+    if(object == NULL) {
+        return;
+    }
+
+    hashmap_iterate(object->map, free_hashmap, NULL);
+
+    hashmap_free(object->map);
+    test_free(object);
+}
+
+char* parse_string(unsigned int begin, const char* str, unsigned int* end) {
+    const unsigned int str_length = strlen(str);
+   
+    for(unsigned int i = begin; i < str_length; i++) {
+        if(str[i] != ' ') {
+            if(str[i] == '\"') {
+                i = i + 1;
+                char buffer[100];
+                memset(&buffer, 0, 100);
+                for(unsigned int ix = 0; ix < 100; ix++) {
+                    if(str[i + ix] == '\"') { // string ended
+                        *end = i + ix + 1;
+                        char* answer = malloc(sizeof(char) * strlen(buffer) + 1);
+                        if(answer == NULL) {
+                            return NULL;
+                        }
+                        memcpy(answer, buffer, strlen(buffer));
+                        answer[strlen(buffer)] = '\0';
+                        return answer;
+                    } else if(str[i + ix] == '\\') { //if backslash then look if valid char is after
+                        if(str[i + ix + 1] == '\"') {
+                            buffer[ix] = '\"';
+                        } else if(str[i + ix + 1] == '\\') {
+                            buffer[ix] = '\\';
+                        } else if(str[i + ix + 1] == '/') {
+                            buffer[ix] = '/';
+                        } else if(str[i + ix + 1] == 'b') {
+                            buffer[ix] = '\b';
+                        } else if(str[i + ix + 1] == 'f') {
+                            buffer[ix] = '\f';
+                        } else if(str[i + ix + 1] == 'n') {
+                            buffer[ix] = '\n';
+                        } else if(str[i + ix + 1] == 'r') {
+                            buffer[ix] = '\r';
+                        } else if(str[i + ix + 1] == 't') {
+                            buffer[ix] = '\t';
+                        } else if(str[i + ix + 1] == 'u') {
+                            return NULL; // TODO
+                            //buffer[ix] = '\u';//todo format to hexadecimal
+                        }  else {
+                            return NULL;
+                        }
+                            
+                        i = i + 1; // skip one char
+                        
+                    } else { // any other char add to buffer
+                        buffer[ix] = str[i + ix];
+                    }
+                }
+            } else {
+                return NULL;
+            }
+        }
+    }
+}
+
+json_value* parse_value(const char* name, unsigned int begin, const char* str, unsigned int* end) {
+    
+    const unsigned int str_length = strlen(str);
+    for(unsigned int i = begin; i < str_length; i++) {
+        if(str[i] != ' ') {
+            //Check which type of value it is
+            if(str[i] == '{') { // it's an object
+                //json_object* obj = parse_object();
+            } else if(str[i] == '\"') { // it's an string
+                char* string = parse_string(i, str, end);
+                //to object value
+            } else if(str[i] == '-' || isdigit(str[i])) { // it's an number
+                char number[100];
+                memset(number, 0, 100);
+                int doublevalue = 0;
+                for(unsigned int ix = 0; ix + i< str_length; ix++) {
+                    //go through each numbers
+                    if(str[ix + i] == '.') {
+                        doublevalue = 1;
+                    }
+                    if(str[ix + i] == '-' || isdigit(str[ix + i]) || str[ix + i] == '.' || str[ix + i] == '+') {
+                        number[ix] = str[ix + i];
+                    } else {
+                        //end reached or error
+                        *end = ix + i + 1;
+                        //try to parse
+                        if(doublevalue == 1) {
+                            //double
+                        } else {
+                            //int todo long int
+                            errno = 0;
+                            int num_int = strtol(number, NULL, 10);
+                        
+                            if(errno == 0) {
+                                // valid conversion
+                                //create new memory for int and copy
+                                int* res = malloc(sizeof(int));
+                                memcpy(res, &num_int, sizeof(int));
+                                json_value* obj = json_value_create(res, JSON_INT, name);
+                                return obj;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+int parse_object(unsigned int begin, const char* str, json_object* obj) {
+    //stops after parsing first object after begin
+    const unsigned int str_length = strlen(str);
+    if(begin > str_length) return 1;
+    if(obj == NULL) return 1;
+
+    for(unsigned int i = begin; i < str_length; i++) {
+        if(str[i] != ' ') { // Skip whitespace
+            if(str[i] == '{') {
+                //Valid object beginning
+
+                // Parse value('s)
+                int end = 0;
+                char* name = parse_string(i + 1, str, &end); // Get object name
+                if(name == NULL) {
+                    return 1;
+                }
+                json_value* val = parse_value(name, end, str, &end);
+                free(name);
+
+                if(val == NULL) {
+                    return 1;
+                }
+                //Insert value into object
+                json_value* ret = NULL;
+                if(hashmap_get(obj->map, name, (void**)(&ret)) == MAP_OK) {
+                    return 1;
+                }
+
+                if(hashmap_put(obj->map, name, val) != MAP_OK) {
+                    //Insert errors
+                    json_value_free(val);
+                    return 1;
+                }
+
+                return 0;
+
+            } else {
+                return 1;
+            }
+        }
+    }
+}
+
+json_object* json_object_from_str(const char* str) {
+    
+    json_object* result = json_object_create();
+    if(parse_object(0, str, result) != 0) {
+        json_object_free(result);
+    }
+
+    return result;
+}
 
 #define CONVERT_TO(to, from)\
     {to res = (to)*(from*)value->value;\
@@ -256,249 +380,183 @@ void* json_value_convert(json_value* value, json_value_type type) {
     return NULL;
 }
 
-char* json_value_to_str(json_value* value, int formatted) {
-    /*Create the string representation of the value*/
+int json_object_value_to_str_iterator(void* cont, void* val);
+
+typedef struct iterator_container_t {
+    char* text;
+    int prev_elem;
+} iterator_container;
+
+char* json_object_to_str(const json_object* object) {
     char* result;
-    result = NULL;
-    switch(value->type) {
-        case JSON_OBJECT: {
-            result = json_object_to_str(value->value, formatted);
-            break;     
-        } 
-        default: {
-            result = json_value_convert(value, JSON_STRING);
-            break;
-        }
+
+    if(object == NULL) {
+        return NULL;
     }
-    
+
+    if(hashmap_length(object->map) > 0) {
+        result = test_malloc(sizeof(char) * 2); // {} the third for \0 will be set by hashmap_iterate
+        if(result == NULL) {
+            return NULL;
+        }
+
+        result[0] = '{';
+        result[1] = '\0';
+
+        iterator_container ct;
+        ct.text = result;
+        ct.prev_elem = 0;
+        if(hashmap_iterate(object->map, json_object_value_to_str_iterator, &ct) != MAP_OK) {
+            test_free(result);
+            return NULL;
+        }
+
+        strcat(result, "}");
+    } else {
+        result = test_malloc(sizeof(char) * 3); // {} the third for \0 will be set by hashmap_iterate
+        if(result == NULL) {
+            return NULL;
+        }
+
+        result[0] = '{';
+        result[1] = '}';
+        result[2] = '\0';
+    }
     return result;
 }
 
-char* json_object_value_to_str(json_object_value* value, int formatted) {
-    /*Create the string "name": + json_value_to_str() */
+char* json_value_to_str(json_value* value) {
+    /*Create the string representation of the value*/
     char* result;
+    char* value_str;
     unsigned int size;
+
     if(value == NULL) {
         return NULL;
     }
 
-    char* value_str = json_value_to_str(value->value, formatted); // TODO change to convert func
-    if(value_str == NULL) {
-        return NULL;
+    if(value->name != NULL) {
+        size = 4 + strlen(value->name);
     }
+    
+    result = NULL;
+    value_str = NULL;
 
-    size = 4 + strlen(value->name) + strlen(value_str); // 4 for the 2 "" the : and the \0
+    switch(value->type) {
+        case JSON_OBJECT: {
+            value_str = json_object_to_str(value->value);
+            break;     
+        } 
+        default: {
+            value_str = json_value_convert(value, JSON_STRING);
+            break;
+        }
+    }
+    size = size + strlen(value_str);
 
     result = test_malloc(sizeof(char) * size);
     if(result == NULL) {
         return NULL;
     }
+
     memset(result, 0, size);
-    result[0] = '\"';
-    strcat(result, value->name);
-    strcat(result, "\":");
+    if(value->name != NULL) {
+        result[0] = '\"';
+        strcat(result, value->name);
+        strcat(result, "\":");
+    }
     strcat(result, value_str); // value string is null terminated so that terminates this string automatically
     test_free(value_str);
-
-    return result;
-}
-
-//TODO work on this, implement formatting, implement all types
-char* json_object_to_str(const json_object* object, int formatted) {
-    char* result;
-    json_object_value* element;
-    unsigned int size;
-    char number[32]; //Enough for all possible numeric values that could be read
-
-    if(object == NULL) {
-        return NULL;
-    }
-
-    result = test_malloc(sizeof(char) * 3);
-    if(result == NULL) {
-        return NULL;
-    }
-    size = 3;
-    element = object->first;
-
-    result[0] = '{';
-    result[1] = 0;
-    result[2] = 0;
-
-    while(element != NULL) {
-        char* value_str = json_object_value_to_str(element, formatted); // "name":value
     
-        if(value_str == NULL) {
-            test_free(result);
-            return NULL;
-        }
-
-        size = size + strlen(value_str);
-
-        if(element->next != NULL) {
-            size = size + 1; // For the comma
-        }
-
-        void* tmp = realloc(result, size);
-        if(tmp == NULL) {
-            test_free(result);
-            return NULL;
-        }
-        result = tmp;
-
-        strcat(result, value_str);
-        test_free(value_str);
-
-        if(element->next != NULL) {
-            strcat(result, ",");
-        }
-
-        element = element->next;
-    }
-    strcat(result, "}\0");
-
     return result;
 }
 
-void json_object_free(json_object* object) {
-    json_object_value* element;
-    json_object_value* next_element;
-    if(object == NULL) {
-        return;
+//Implementation of map iterator func for parsing
+int json_object_value_to_str_iterator(void* cont, void* val) {
+    unsigned int size = 0;
+    char* value_str = json_value_to_str((json_value*)val); // "name":value
+    if(value_str == NULL) {
+        return MAP_MISSING; // Error
     }
 
-    element = object->first;
-    next_element = NULL;
+    iterator_container* ct = (iterator_container*)cont;
+    size = strlen(ct->text) + strlen(value_str);
 
-    while(element != NULL) {
-        next_element = element->next;
-
-        json_object_value_free(element);
-
-        element = next_element;
+    if(ct->prev_elem != 0) {
+        size = size + 1; // For the comma
     }
 
-    test_free(object);
-}
-
-int json_object_get_value(const json_object* object, const char* name, json_object_value** result) {
-    if(object == NULL) {
-        return -1;
+    void* tmp = realloc(ct->text, size);
+    if(tmp == NULL) {
+        return MAP_MISSING; // Error
     }
+    ct->text = tmp;
 
-    (*result) = object->first;
-    while((*result) != NULL) {
-        if(strcmp((*result)->name, name) == 0) {
-            return 0;
-        }
-
-        *result = (*result)->next;
+    if(ct->prev_elem != 0) {
+        strcat(ct->text, ",");
     }
-
-    return -1;
+    strcat(ct->text, value_str);
+    test_free(value_str);
+    ct->prev_elem = 1;
+    return MAP_OK;
 }
 
 int json_object_remove(json_object* object, const char* name) {
-    json_object_value* element;
-    json_object_value* last_element;
-
-    if(object == NULL) {
-        return -1;
+    json_value* ret;\
+    if(hashmap_get(object->map, name, (void**)(&ret)) == MAP_OK) {
+        hashmap_remove(object->map, name);
+        json_value_free(ret);
+        return 0;
     }
 
-    element = object->first;
-    last_element = NULL;
-
-    while(element != NULL) {
-        if(strcmp(element->name, name) == 0) {
-            //Element found delete it and set last_element next to element next if last element is not null, otherwise set object first to null
-
-            if(last_element != NULL) {
-                last_element->next = element->next;
-            } else {
-                object->first = NULL;
-            }
-
-            json_object_value_free(element);
-
-            return 0;
-        }
-
-        last_element = element;
-        element = element->next;
-    }
-
-    return -1;
+    return 1;
 }
 
 //Implementation for types
 #define JSON_INTERNAL_MACRO(m_type, m_type_enum)\
+    /*return value needs to be freed by user*/\
     int json_object_get_##m_type(const json_object* object, const char* name, m_type *result) {\
-        json_object_value* element;\
+        json_value* element;\
         void* tmp;\
         if(object == NULL || result == NULL) {\
-            return -1;\
+            return 1;\
         }\
 \
         element = NULL;\
-\
-        if(json_object_get_value(object, name, &element) == 0) {\
-            tmp = json_value_convert(element->value, m_type_enum);\
-            if(tmp != NULL) {\
-                *result = *(m_type*)tmp;\
-                test_free(tmp);\
-                return 0;\
-            }\
-            return -1;\
+        if(hashmap_get(object->map, name, (void**)(&element)) != MAP_OK) {\
+            return 1;\
         }\
-        return -1;\
+        \
+        tmp = json_value_convert(element, m_type_enum);\
+        if(tmp != NULL) {\
+            *result = *(m_type*)tmp;\
+            free(tmp);\
+            return 0;\
+        }\
+        return 1;\
     }\
 \
     int json_object_add_##m_type(json_object* object, const char* name, const m_type value) {\
-        json_object_value* element;\
-        json_object_value* last_element;\
         m_type* data;\
-        m_type tmp;\
-\
-        if(object == NULL) {\
-            return -1;\
-        }\
-\
-        if(json_object_get_##m_type(object, name, &tmp) == 0) {\
-            return -1;\
+        json_value* element;\
+        if(hashmap_get(object->map, name, (void**)(&element)) == MAP_OK) {/*Value already exists*/\
+            return 1;\
         }\
 \
         data = test_malloc(sizeof(m_type));\
 \
         if(data == NULL) {\
-            return -1;\
+            return 1;\
         }\
 \
         *data = value;\
-        if(object->first == NULL) {\
-            object->first = json_object_value_create(name, data, m_type_enum);\
-            if(object->first == NULL) {\
-                test_free(data);\
-                return -1;\
-            }\
-            return 0;\
-        }\
-        element = object->first;\
-        last_element = NULL;\
 \
-        while(element != NULL) {\
-            if(strcmp(element->name, name) == 0) {\
-                return -1;\
-            }\
-            last_element = element;\
-            element = element->next;\
+        json_value* val = json_value_create(data, m_type_enum, name);\
+        if(hashmap_put(object->map, name, val) != MAP_OK) {\
+            json_value_free(val);\
+            return 1;\
         }\
 \
-        last_element->next = json_object_value_create(name, data, m_type_enum);\
-        if(last_element->next == NULL) {\
-            test_free(data);\
-            return -1;\
-        }\
         return 0;\
     }\
 \
@@ -511,37 +569,20 @@ int json_object_remove(json_object* object, const char* name) {
         return 0;\
     }\
 \
-    int json_object_change_##m_type(const json_object* object, const char* name, const m_type value) {\
-        json_object_value* element;\
+    int json_object_change_##m_type(json_object* object, const char* name, const m_type value) {\
+        m_type* data;\
 \
-        if(object == NULL) {\
-            return -1;\
+        data = test_malloc(sizeof(m_type));\
+\
+        if(data == NULL) {\
+            return 1;\
         }\
 \
-        if(json_object_get_value(object, name, &element) == 0) {\
+        *data = value;\
 \
-            if(element->value == NULL) {\
-                return -1;\
-            }\
+        json_object_remove(object, name);\
 \
-            element->value->type = m_type_enum;\
-\
-            if(element->value->byte_size != sizeof(value)) {/*if the byte size needs to be changeed realloc*/\
-                element->value->byte_size = sizeof(value);\
-                void* tmp = realloc(element->value->value, sizeof(value));\
-                if(tmp == NULL) {\
-                    return -1;\
-                }\
-                element->value->value = tmp;\
-            }\
-\
-\
-            memcpy(element->value->value, &value, element->value->byte_size);\
-\
-            return 0;\
-        }\
-\
-        return -1;\
+        return json_object_add_##m_type(object, name, value);\
     }
 
 JSON_INTERNAL_TYPES

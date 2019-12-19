@@ -34,6 +34,7 @@
 #define JSON_H
 #include <stdlib.h>
 #include <string.h>
+#include <hashmap.h>
 
 typedef enum json_value_type_e {
     JSON_STRING,
@@ -54,18 +55,12 @@ typedef struct json_value_t {
     json_value_type type; //For remembering which value is stored in the void pointer
     unsigned short byte_size; //For checking which casts are valid
     void* value; //The actual value
+    const char* name;
 } json_value;
 
-//The wrapped json value for use in the json object linked list
-typedef struct json_object_value_t {
-    char* name;
-    json_value* value;
-    struct json_object_value_t* next;
-} json_object_value;
-
-/*Holds a linked list of json_value's*/ //TODO instead of linked list hash map
+/*Holds a linked list of json_value's*/
 typedef struct json_object_t {
-    json_object_value* first; // First value to linked list
+    map_t map;
 } json_object;
 
 /*Holds an array of json_value's*/
@@ -90,15 +85,15 @@ extern json_object* json_object_create(void);//Empty json object
 extern json_object* json_object_from_file(const char* path); //Try to load json object from file, fails if parse error or the main context is not an object(first char is not '{')
 extern json_object* json_object_from_str(const char* str);
 //TODO implement formatting
-extern int json_object_to_file(const json_object* object, const char* path, int formatted);
-extern char* json_object_to_str(const json_object* object, int formatted);
+extern int json_object_to_file(const json_object* object, const char* path);
+extern char* json_object_to_str(const json_object* object);
 extern void json_object_free(json_object* object); // Free the json_object struct
 
 #define JSON_INTERNAL_MACRO(m_type, m_type_enum)\
     extern int json_object_get_##m_type(const json_object* object, const char* name, m_type *result);\
     extern int json_object_add_##m_type(json_object* object, const char* name, const m_type value);\
     extern int json_object_insert_##m_type(json_object* object, const char* name, const m_type value);\
-    extern int json_object_change_##m_type(const json_object* object, const char* name, const m_type value); 
+    extern int json_object_change_##m_type(json_object* object, const char* name, const m_type value); 
 
 JSON_INTERNAL_TYPES
 

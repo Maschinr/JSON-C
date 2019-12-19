@@ -5,12 +5,11 @@ json_object* object;
 
 void test_CreateJsonObject(void) {
     TEST_ASSERT_NOT_EQUAL(NULL, object);
-    TEST_ASSERT_EQUAL(NULL, object->first);
 }
 
 void test_JsonObjectToStrEmpty(void) {
     char* string;
-    string = json_object_to_str(object, 0);
+    string = json_object_to_str(object);
     TEST_ASSERT_EQUAL_STRING("{}", string);
     free(string);
 }
@@ -19,14 +18,14 @@ void test_JsonObjectToStrValues(void) {
     char* string;
     json_object_add(object, "test", 10);
     json_object_add(object, "test2", 30);
-    string = json_object_to_str(object, 0);
+    string = json_object_to_str(object);
     TEST_ASSERT_EQUAL_STRING("{\"test\":10,\"test2\":30}", string);
     free(string);
 }
 
 void test_JsonObjectToStrNullObject(void) {
     char* string;
-    string = json_object_to_str(NULL, 0);
+    string = json_object_to_str(NULL);
     TEST_ASSERT_EQUAL(NULL, string);
     free(string);
 }
