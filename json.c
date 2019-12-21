@@ -17,7 +17,7 @@ void test_free(void* ptr) {
 }
 
 void TMP_DELETE() {
-    printf("Created: %i\nFreed: %i\n", created, freed);
+    printf("Created: %i Freed: %i\n", created, freed);
 }
 
 //!HINT Does not copy data, data needs to alloced beforehand because of reasons
@@ -56,6 +56,7 @@ void json_value_free(json_value* value) {
     }
 
     test_free(value->value);
+    test_free(value->name);
     test_free(value);
 }
 
@@ -181,9 +182,10 @@ json_value* parse_value(const char* name, unsigned int begin, const char* str, u
                             if(errno == 0) {
                                 // valid conversion
                                 //create new memory for int and copy
-                                int* res = malloc(sizeof(int));
+                                int* res = test_malloc(sizeof(int));
                                 memcpy(res, &num_int, sizeof(int));
                                 json_value* obj = json_value_create(res, JSON_INT, name);
+                               
                                 return obj;
                             }
                         }
@@ -200,7 +202,7 @@ int parse_object(unsigned int begin, const char* str, json_object* obj) {
     if(begin > str_length) return 1;
     if(obj == NULL) return 1;
     unsigned int position = begin;
-
+   
     for(position; position < str_length; position++) {
         if(str[position] != ' ') { // Skip whitespace
             if(str[position] == '{' || position + 1 < str_length) {
@@ -224,13 +226,11 @@ int parse_object(unsigned int begin, const char* str, json_object* obj) {
         unsigned int end = 0;
         char* name = parse_string(position, str, &end); // Get object name
         if(name == NULL) {
-            printf("Error0\n");
             return 1;
         }
         position = end;
-
         json_value* val = parse_value(name, position, str, &end);
-        free(name);
+        test_free(name);
         position = end; 
 
         if(val == NULL) {
@@ -238,17 +238,21 @@ int parse_object(unsigned int begin, const char* str, json_object* obj) {
         }
         //Insert value into object
         json_value* ret = NULL;
-        if(hashmap_get(obj->map, name, (void**)(&ret)) == MAP_OK) {
+        if(hashmap_get(obj->map, val->name, (void**)(&ret)) == MAP_OK) {
             return 1;
         }
 
-        if(hashmap_put(obj->map, name, val) != MAP_OK) {
+        if(hashmap_put(obj->map, val->name, val) != MAP_OK) {
             //Insert errors
             json_value_free(val);
             return 1;
         }
 
-        printf("Value added %s\n", val->name);
+        if(hashmap_get(obj->map, val->name, (void**)(&ret)) == MAP_OK) {
+            printf("Value added %s %s\n", val->name, val->value);
+        }
+
+        
     }
 
     return 0;
@@ -284,8 +288,12 @@ void* json_value_convert(json_value* value, json_value_type type) {
         case JSON_STRING: { // Convert to string
             switch(value->type) { // from
                 case JSON_STRING: { // String, just strcpy
-                    result = test_malloc(strlen(value->value) + 1); // + 1 for\0
+                    char* result = test_malloc(strlen(value->value) + 1); // + 1 for\0
+                    if(result == NULL) {
+                        return NULL;
+                    }
                     strcpy(result, value->value);
+                 
                     return result;
                 }
 
@@ -316,10 +324,12 @@ void* json_value_convert(json_value* value, json_value_type type) {
                         sprintf(number, "%g", *((double*)value->value));
                     }
                     size = strlen(number);
-                    result = test_malloc(sizeof(char) * (size + 1));
+                    char* result = test_malloc(sizeof(char) * (size + 1));
+                    
                     if(result == NULL) {
                         return NULL;
                     }
+
                     memset(result, '\0', size);
                     strcpy(result, number);
                     return result;
@@ -432,12 +442,13 @@ char* json_object_to_str(const json_object* object) {
         iterator_container ct;
         ct.text = result;
         ct.prev_elem = 0;
-        
+        printf("Begin ptr %p\n", result);
         if(hashmap_iterate(object->map, json_object_value_to_str_iterator, &ct) != MAP_OK) {
             test_free(result);
             return NULL;
         }
         result = ct.text;
+        printf("End ptr %p\n", result);
         strcat(result, "}");
     } else {
         result = test_malloc(sizeof(char) * 3); // {} the third for \0 will be set by hashmap_iterate
@@ -524,13 +535,13 @@ int json_object_value_to_str_iterator(void* cont, void* val) {
     if(ct->prev_elem != 0) {
         size = size + 1; // For the comma
     }
-
-    void* tmp = realloc(ct->text, size);
+    void* tmp = realloc(ct->text, size + 1); // +1 for the \0
     if(tmp == NULL) {
         return MAP_MISSING; // Error
     }
+    printf("realloc ptr %p to %p\n", ct->text, tmp);
     ct->text = tmp;
-
+    
     if(ct->prev_elem != 0) {
         strcat(ct->text, ",");
     }
@@ -552,10 +563,10 @@ int json_object_remove(json_object* object, const char* name) {
 }
 
 //Implementation for types
-#define JSON_INTERNAL_MACRO(m_type, m_type_enum)\
+#define JSON_INTERNAL_MACRO(m_name, m_type, m_type_enum)\
     /*return value needs to be freed by user*/\
-    int json_object_get_##m_type(const json_object* object, const char* name, m_type *result) {\
-        json_value* element;\
+    int json_object_get_##m_name(const json_object* object, const char* name, m_type* result) {\
+        json_value* element = NULL;\
         void* tmp;\
         if(object == NULL || result == NULL) {\
             return 1;\
@@ -565,17 +576,19 @@ int json_object_remove(json_object* object, const char* name) {
         if(hashmap_get(object->map, name, (void**)(&element)) != MAP_OK) {\
             return 1;\
         }\
-        \
         tmp = json_value_convert(element, m_type_enum);\
         if(tmp != NULL) {\
+            printf("%s tmp is\n", *(m_type*)tmp);\
+            printf("%s\n", *result);\
             *result = *(m_type*)tmp;\
-            free(tmp);\
+            printf("%s\n", *result);\
+            test_free(tmp);\
             return 0;\
         }\
         return 1;\
     }\
 \
-    int json_object_add_##m_type(json_object* object, const char* name, const m_type value) {\
+    int json_object_add_##m_name(json_object* object, const char* name, const m_type value) {\
         m_type* data;\
         json_value* element;\
         if(hashmap_get(object->map, name, (void**)(&element)) == MAP_OK) {/*Value already exists*/\
@@ -591,6 +604,10 @@ int json_object_remove(json_object* object, const char* name) {
         *data = value;\
 \
         json_value* val = json_value_create(data, m_type_enum, name);\
+        if(val == NULL) {\
+            test_free(data);\
+            return 1;\
+        }\
         if(hashmap_put(object->map, name, val) != MAP_OK) {\
             json_value_free(val);\
             return 1;\
@@ -599,16 +616,16 @@ int json_object_remove(json_object* object, const char* name) {
         return 0;\
     }\
 \
-    int json_object_insert_##m_type(json_object* object, const char* name, const m_type value) {\
+    int json_object_insert_##m_name(json_object* object, const char* name, const m_type value) {\
 \
-        if(json_object_add_##m_type(object, name, value) != 0) {\
-            return json_object_change_##m_type(object, name, value);\
+        if(json_object_add_##m_name(object, name, value) != 0) {\
+            return json_object_change_##m_name(object, name, value);\
         }\
 \
         return 0;\
     }\
 \
-    int json_object_change_##m_type(json_object* object, const char* name, const m_type value) {\
+    int json_object_change_##m_name(json_object* object, const char* name, const m_type value) {\
         m_type* data;\
 \
         data = test_malloc(sizeof(m_type));\
@@ -621,9 +638,85 @@ int json_object_remove(json_object* object, const char* name) {
 \
         json_object_remove(object, name);\
 \
-        return json_object_add_##m_type(object, name, value);\
+        return json_object_add_##m_name(object, name, value);\
     }
 
 JSON_INTERNAL_TYPES
 
 #undef JSON_INTERNAL_MACRO
+
+//String implementation
+int json_object_get_string(const json_object* object, const char* name, char** result) {
+    json_value* element = NULL;
+    void* tmp;
+    if(object == NULL || result == NULL) {
+        return 1;
+    }
+
+    element = NULL;
+    if(hashmap_get(object->map, name, (void**)(&element)) != MAP_OK) {
+        return 1;
+    }
+
+    tmp = json_value_convert(element, JSON_STRING);
+
+    if(tmp != NULL) {
+        *result = tmp;
+        return 0;
+    }
+    return 1;
+}
+
+int json_object_add_string(json_object* object, const char* name, const char* value) {
+    char* data;
+    json_value* element;
+    if(hashmap_get(object->map, name, (void**)(&element)) == MAP_OK) {/*Value already exists*/
+        return 1;
+    }
+
+    data = test_malloc(strlen(value) + 1);
+
+    if(data == NULL) {
+        return 1;
+    }
+
+    strcpy(data, value);
+
+    json_value* val = json_value_create(data, JSON_STRING, name);
+    if(val == NULL) {
+        test_free(data);
+        return 1;
+    }
+
+    if(hashmap_put(object->map, name, val) != MAP_OK) {
+        json_value_free(val);
+        return 1;
+    }
+
+    return 0;
+}
+
+int json_object_insert_string(json_object* object, const char* name, const char* value) {
+
+    if(json_object_add_string(object, name, value) != 0) {
+        return json_object_change_string(object, name, value);
+    }
+
+    return 0;
+}
+
+int json_object_change_string(json_object* object, const char* name, const char* value) {\
+    char* data;
+
+    data = test_malloc(strlen(value) + 1);
+
+    if(data == NULL) {
+        return 1;
+    }
+
+    strcpy(data, value);
+
+    json_object_remove(object, name);
+
+    return json_object_add_string(object, name, value);
+}

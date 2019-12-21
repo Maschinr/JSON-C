@@ -76,9 +76,9 @@ extern void TMP_DELETE();
 //All compatible types for use as x macro
 //TODO variadic macro where the enum can be any values where casting to is possible? else i would need to do all by hand uff, or second param is function to cast val to string and third for converting that would be possible
 #define JSON_INTERNAL_TYPES\
-    JSON_INTERNAL_MACRO(int, JSON_INT)\
-    JSON_INTERNAL_MACRO(float, JSON_FLOAT)\
-    JSON_INTERNAL_MACRO(double, JSON_DOUBLE)\
+    JSON_INTERNAL_MACRO(int, int, JSON_INT)\
+    JSON_INTERNAL_MACRO(float, float, JSON_FLOAT)\
+    JSON_INTERNAL_MACRO(double, double, JSON_DOUBLE)\
 
 //JSON OBJECT FUNCTIONS
 extern json_object* json_object_create(void);//Empty json object
@@ -89,15 +89,17 @@ extern int json_object_to_file(const json_object* object, const char* path);
 extern char* json_object_to_str(const json_object* object);
 extern void json_object_free(json_object* object); // Free the json_object struct
 
-#define JSON_INTERNAL_MACRO(m_type, m_type_enum)\
-    extern int json_object_get_##m_type(const json_object* object, const char* name, m_type *result);\
-    extern int json_object_add_##m_type(json_object* object, const char* name, const m_type value);\
-    extern int json_object_insert_##m_type(json_object* object, const char* name, const m_type value);\
-    extern int json_object_change_##m_type(json_object* object, const char* name, const m_type value); 
-
+#define JSON_INTERNAL_MACRO(m_name, m_type, m_type_enum)\
+    extern int json_object_get_##m_name(const json_object* object, const char* name, m_type* result);\
+    extern int json_object_add_##m_name(json_object* object, const char* name, const m_type value);\
+    extern int json_object_insert_##m_name(json_object* object, const char* name, const m_type value);\
+    extern int json_object_change_##m_name(json_object* object, const char* name, const m_type value); 
 JSON_INTERNAL_TYPES
-
 #undef JSON_INTERNAL_MACRO
+extern int json_object_get_string(const json_object* object, const char* name, char** result);
+extern int json_object_add_string(json_object* object, const char* name, const char* value);
+extern int json_object_insert_string(json_object* object, const char* name, const char* value);
+extern int json_object_change_string(json_object* object, const char* name, const char* value); 
 
 extern int json_object_remove(json_object* object, const char* name); // Remove a value from the object
 
@@ -113,24 +115,28 @@ extern const int json_array_get_int(const json_array* array, const unsigned int 
     int*: json_object_get_int,\
     float*: json_object_get_float,\
     double*: json_object_get_double\
+    char**: json_object_get_string\
 ) (object, name, result)
 
 #define json_object_add(object, name, value) _Generic((value),\
     int: json_object_add_int,\
     float: json_object_add_float,\
     double: json_object_add_double\
+    char*: json_object_add_string\
 ) (object, name, value)
 
 #define json_object_insert(object, name, value) _Generic((value),\
     int: json_object_insert_int,\
     float: json_object_insert_float,\
     double: json_object_insert_double\
+    char*: json_object_insert_string\
 ) (object, name, value)
 
 #define json_object_change(object, name, value) _Generic((value),\
     int: json_object_change_int,\
     float: json_object_change_float,\
     double: json_object_change_double\
+    char*: json_object_change_string\
 ) (object, name, value)
 
 #endif
