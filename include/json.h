@@ -53,9 +53,9 @@ typedef enum json_value_type_e {
 //The base json value which contains all informations needed for smart casting
 typedef struct json_value_t {
     json_value_type type; //For remembering which value is stored in the void pointer
-    unsigned short byte_size; //For checking which casts are valid
+    //unsigned short byte_size; //For checking which casts are valid
     void* value; //The actual value
-    const char* name;
+    char* name;
 } json_value;
 
 /*Holds a linked list of json_value's*/

@@ -16,8 +16,8 @@ void test_JsonObjectToStrEmpty(void) {
 
 void test_JsonObjectToStrValues(void) {
     char* string;
-    json_object_add(object, "test", 10);
-    json_object_add(object, "test2", 30);
+    json_object_add_int(object, "test", 10);
+    json_object_add_int(object, "test2", 30);
     string = json_object_to_str(object);
     TEST_ASSERT_EQUAL_STRING("{\"test\":10,\"test2\":30}", string);
     free(string);
