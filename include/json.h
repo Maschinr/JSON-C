@@ -74,11 +74,11 @@ extern void TMP_DELETE();
 
 //TODO enter all types
 //All compatible types for use as x macro
-//TODO variadic macro where the enum can be any values where casting to is possible? else i would need to do all by hand uff, or second param is function to cast val to string and third for converting that would be possible
 #define JSON_INTERNAL_TYPES\
     JSON_INTERNAL_MACRO(int, int, JSON_INT)\
     JSON_INTERNAL_MACRO(float, float, JSON_FLOAT)\
     JSON_INTERNAL_MACRO(double, double, JSON_DOUBLE)\
+    JSON_INTERNAL_MACRO(object, json_object*, JSON_OBJECT)
 
 //JSON OBJECT FUNCTIONS
 extern json_object* json_object_create(void);//Empty json object
@@ -91,9 +91,9 @@ extern void json_object_free(json_object* object); // Free the json_object struc
 
 #define JSON_INTERNAL_MACRO(m_name, m_type, m_type_enum)\
     extern int json_object_get_##m_name(const json_object* object, const char* name, m_type* result);\
-    extern int json_object_add_##m_name(json_object* object, const char* name, const m_type value);\
-    extern int json_object_insert_##m_name(json_object* object, const char* name, const m_type value);\
-    extern int json_object_change_##m_name(json_object* object, const char* name, const m_type value); 
+    extern int json_object_add_##m_name(json_object* object, const char* name, m_type value);\
+    extern int json_object_insert_##m_name(json_object* object, const char* name, m_type value);\
+    extern int json_object_change_##m_name(json_object* object, const char* name, m_type value); 
 JSON_INTERNAL_TYPES
 #undef JSON_INTERNAL_MACRO
 extern int json_object_get_string(const json_object* object, const char* name, char** result);
