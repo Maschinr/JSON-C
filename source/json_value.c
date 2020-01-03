@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 
-json_value* json_value_create(const char* name, const void* data, unsigned int data_size, json_value_type type) {
+json_value* json_value_create(const char* name, void* data, unsigned int data_size, json_value_type type) {
     json_value* result;
 
     if(data == NULL ||name == NULL) {

@@ -1,8 +1,11 @@
 #include <json_value_parse.h>
 #include <json_object.h>
 #include <json_object_parse.h>
+#include <json_parse.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+
 char* json_value_to_str(json_value* value) {
     char* result;
     char* value_str;

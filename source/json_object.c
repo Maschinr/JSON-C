@@ -95,7 +95,7 @@ int json_object_get_string(const json_object* object, const char* name, char** r
     return 1;
 }
 
-int json_object_add_string(json_object* object, const char* name, const char* value) {
+int json_object_add_string(json_object* object, const char* name, char* value) {
     json_value* element;
 
     if(object == NULL || value == NULL || name == NULL) {
@@ -120,14 +120,14 @@ int json_object_add_string(json_object* object, const char* name, const char* va
     return 0;
 }
 
-int json_object_insert_string(json_object* object, const char* name, const char* value) {
+int json_object_insert_string(json_object* object, const char* name, char* value) {
     if(json_object_add_string(object, name, value) != 0) {
         return json_object_change_string(object, name, value);
     }
     return 0;
 }
 
-int json_object_change_string(json_object* object, const char* name, const char* value) {
+int json_object_change_string(json_object* object, const char* name, char* value) {
     json_object_remove(object, name);
     return json_object_add_string(object, name, value);
 }
@@ -155,7 +155,7 @@ int json_object_get_number(const json_object* object, const char* name, int* res
     return 1;
 }
 
-int json_object_add_number(json_object* object, const char* name, const int value) {
+int json_object_add_number(json_object* object, const char* name, int value) {
     json_value* element;
 
     if(name == NULL || object == NULL) {
@@ -180,14 +180,14 @@ int json_object_add_number(json_object* object, const char* name, const int valu
     return 0;
 }
 
-int json_object_insert_number(json_object* object, const char* name, const int value) {
+int json_object_insert_number(json_object* object, const char* name, int value) {
     if(json_object_add_number(object, name, value) != 0) {
         return json_object_change_number(object, name, value);
     }
     return 0;
 }
 
-int json_object_change_number(json_object* object, const char* name, const int value) {
+int json_object_change_number(json_object* object, const char* name, int value) {
     json_object_remove(object, name);
     return json_object_add_number(object, name, value);
 }
@@ -215,7 +215,7 @@ int json_object_get_float_number(const json_object* object, const char* name, do
     return 1;
 }
 
-int json_object_add_float_number(json_object* object, const char* name, const double value) {
+int json_object_add_float_number(json_object* object, const char* name, double value) {
     json_value* element;
 
     if(name == NULL || object == NULL) {
@@ -240,14 +240,14 @@ int json_object_add_float_number(json_object* object, const char* name, const do
     return 0;
 }
 
-int json_object_insert_float_number(json_object* object, const char* name, const double value) {
+int json_object_insert_float_number(json_object* object, const char* name, double value) {
     if(json_object_add_float_number(object, name, value) != 0) {
         return json_object_change_float_number(object, name, value);
     }
     return 0;
 }
 
-int json_object_change_float_number(json_object* object, const char* name, const double value) {
+int json_object_change_float_number(json_object* object, const char* name, double value) {
     json_object_remove(object, name);
     return json_object_add_float_number(object, name, value);
 }
@@ -274,7 +274,7 @@ int json_object_get_object(const json_object* object, const char* name, json_obj
     return 1;
 }
 
-int json_object_add_object(json_object* object, const char* name, const json_object* value) {
+int json_object_add_object(json_object* object, const char* name, json_object* value) {
     json_value* element;
 
     if(name == NULL || object == NULL) {
@@ -299,7 +299,7 @@ int json_object_add_object(json_object* object, const char* name, const json_obj
     return 0;
 }
 
-int json_object_insert_object(json_object* object, const char* name, const json_object* value) {
+int json_object_insert_object(json_object* object, const char* name, json_object* value) {
     if(json_object_add_object(object, name, value) != 0) {
         json_object_remove(object, name);
         return json_object_add_object(object, name, value);
@@ -329,7 +329,7 @@ int json_object_get_array(const json_object* object, const char* name, json_arra
     return 1;
 }
 
-int json_object_add_array(json_object* object, const char* name, const json_array* value) {
+int json_object_add_array(json_object* object, const char* name, json_array* value) {
  json_value* element;
 
     if(name == NULL || object == NULL) {
@@ -354,7 +354,7 @@ int json_object_add_array(json_object* object, const char* name, const json_arra
     return 0;
 }
 
-int json_object_insert_array(json_object* object, const char* name, const json_array* value) {
+int json_object_insert_array(json_object* object, const char* name, json_array* value) {
     if(json_object_add_array(object, name, value) != 0) {
         json_object_remove(object, name);
         return json_object_add_array(object, name, value);
