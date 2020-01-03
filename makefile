@@ -1,9 +1,9 @@
 FLAGS = -Iinclude -Ithird-party
 
-default: test build
+default: build
 
-build: main.o hashmap.o json.o
-	gcc -o out main.o hashmap.o json.o -Wall 
+build: main.o hashmap.o json_value.o json_value_parse.o json_object.o json_object_parse.o json_array.o json_array_parse.o
+	gcc -o out main.o hashmap.o json_value.o json_value_parse.o json_object.o json_object_parse.o json_array.o json_array_parse.o -Wall 
 
 main.o: main.c third-party/hashmap.h
 	gcc -c main.c $(FLAGS)
@@ -11,21 +11,24 @@ main.o: main.c third-party/hashmap.h
 hashmap.o: third-party/hashmap.c third-party/hashmap.h
 	gcc -c third-party/hashmap.c $(FLAGS)
 
-json.o: json.c include/json.h third-party/hashmap.h
-	gcc -c json.c $(FLAGS)
+json_value.o: json_value.c include/json_value.h
+	gcc -c json_value.c $(FLAGS)
 
-# Test Code
-TestJson.o: test/TestJson.c 
-	gcc -c test/TestJson.c $(FLAGS)
+json_value_parse.o: json_value_parse.c include/json_value_parse.h
+	gcc -c json_value_parse.c $(FLAGS)
 
-unity.o: third-party/unity.c third-party/unity.h
-	gcc -c third-party/unity.c $(FLAGS)
+json_object.o: json_object.c include/json_object.h third-party/hashmap.h
+	gcc -c json_object.c $(FLAGS)
 
-test: TestJson.o json.o unity.o hashmap.o
-	gcc -o json_test json.o TestJson.o unity.o hashmap.o -Wall 
-	./json_test
+json_object_parse.o: json_object_parse.c include/json_object_parse.h
+	gcc -c json_object_parse.c $(FLAGS)
+
+json_array.o: json_array.c include/json_array.h
+	gcc -c json_array.c $(FLAGS)
+
+json_array_parse.o: json_array_parse.c include/json_array_parse.h
+	gcc -c json_array_parse.c $(FLAGS)
 
 clear:
 	del *.o
 	del out.exe
-	del json_test.exe
