@@ -6,9 +6,15 @@
 #include <string.h>
 
 /*Local Functions*/
-int free_hashmap_iterator(void* null, void* val) {
-    json_value_free((json_value*)val);
+int free_hashmap_iterator(void* null, void* value) {
+    json_value_free((json_value*)value);
     return MAP_OK;
+}
+
+int copy_object_iterator(void* orig_object, void* value) {
+    json_object* object = (json_object*)orig_object;
+    json_value* jvalue = (json_value*)value;
+    hashmap_put(object, jvalue->name, jvalue);
 }
 /*Local Functions End*/
 
@@ -22,6 +28,37 @@ json_object* json_object_create(void) {
     }
 
     result->map = hashmap_new();
+
+    if(result->map == NULL) {
+        free(result);
+        return NULL;
+    }
+
+    return result;
+}
+
+json_object* json_object_copy(json_object* object) {
+    json_object* result;
+
+    result = malloc(sizeof(json_object));
+
+    if(result == NULL) {
+        return NULL;
+    }
+
+    result->map = hashmap_new();
+
+    if(result->map == NULL) {
+        free(result);
+        return NULL;
+    }
+
+    if(hashmap_iterate(object, copy_object_iterator, object) != 0) {
+        free(result);
+        hashmap_free(result->map);
+        return NULL;
+    }
+
     return result;
 }
 

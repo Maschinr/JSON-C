@@ -2,8 +2,8 @@ FLAGS = -Iinclude -Ithird-party
 
 default: build
 
-build: main.o hashmap.o json_value.o json_value_parse.o json_object.o json_object_parse.o json_array.o json_array_parse.o
-	gcc -o out main.o hashmap.o json_value.o json_value_parse.o json_object.o json_object_parse.o json_array.o json_array_parse.o -Wall 
+build: main.o hashmap.o json_value.o json_value_parse.o json_object.o json_object_parse.o json_array.o json_array_parse.o json_parse.o
+	gcc -o out main.o hashmap.o json_value.o json_value_parse.o json_object.o json_object_parse.o json_array.o json_array_parse.o json_parse.o -Wall 
 
 main.o: main.c third-party/hashmap.h
 	gcc -c main.c $(FLAGS)
@@ -28,6 +28,9 @@ json_array.o: json_array.c include/json_array.h
 
 json_array_parse.o: json_array_parse.c include/json_array_parse.h
 	gcc -c json_array_parse.c $(FLAGS)
+
+json_parse.o: json_parse.c include/json_parse.h
+	gcc -c json_parse.c $(FLAGS)
 
 clear:
 	del *.o

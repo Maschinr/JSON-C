@@ -36,7 +36,16 @@ json_value* json_value_create(const char* name, const void* data, unsigned int d
         return NULL;
     }
 
-    memcpy(result->value, data, data_size);
+    if(type != JSON_OBJECT) {
+        memcpy(result->value, data, data_size);
+    } else {
+        result->value = json_object_copy(data);
+    }
+
+    if(result->value == NULL) {
+        free(result);
+        return NULL;
+    }
 
     return result;
 }

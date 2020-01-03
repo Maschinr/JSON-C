@@ -8,6 +8,7 @@ typedef struct json_object_t {
 } json_object;
 
 extern json_object* json_object_create(void);
+extern json_object* json_object_copy(json_object* object);
 extern void json_object_free(json_object* object);
 
 extern int json_object_get_string(const json_object* object, const char* name, char** result);
