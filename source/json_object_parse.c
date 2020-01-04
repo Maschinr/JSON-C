@@ -14,6 +14,7 @@ typedef struct iterator_container_t {
 int json_object_value_to_str_iterator(void* cont, void* val) {
     unsigned int size = 0;
     char* value_str = json_value_to_str((json_value*)val); // "name":value
+
     if(value_str == NULL) {
         return MAP_MISSING; // Error
     }
@@ -120,6 +121,10 @@ int parse_object(unsigned int begin, const char* str, json_object* obj, unsigned
             //object ended
             break;
         }
+
+        if(str[position] == ' ') {
+            continue;
+        }
         
         // Parse value('s)
         char* name = parse_string(position, str, end); // Get object name
@@ -139,7 +144,6 @@ int parse_object(unsigned int begin, const char* str, json_object* obj, unsigned
         if(hashmap_get(obj->map, val->name, (void**)(&ret)) == MAP_OK) {
             return 1;
         }
-
         if(hashmap_put(obj->map, val->name, val) != MAP_OK) {
             //Insert errors
             json_value_free(val);

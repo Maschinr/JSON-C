@@ -6,6 +6,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
+#include <stdio.h>
 
 char* json_value_to_str(json_value* value) {
     char* result;
@@ -17,7 +18,7 @@ char* json_value_to_str(json_value* value) {
     }
 
     if(value->name != NULL) {
-        size = 4 + strlen(value->name);
+        size = 3 + strlen(value->name);
     }
     
     result = NULL;
@@ -50,13 +51,13 @@ char* json_value_to_str(json_value* value) {
     
     size = size + strlen(value_str);
     
-    result = malloc(sizeof(char) * size + 1);
+    result = malloc(size + 1);
     if(result == NULL) {
         return NULL;
     }
-   
+
     if(value->name != NULL) {
-        result[0] = '\"';
+        strcpy(result, "\"");
         strcat(result, value->name);
         strcat(result, "\":");
     }
@@ -86,7 +87,7 @@ json_value* parse_value(const char* name,  const char* str, unsigned int begin, 
                 json_value* val = json_value_create(name, string, strlen(string) + 1,  JSON_STRING);
                 free(string);
                 return val;
-            } else if(str[i] == '-' || isdigit(str[i])) { // it's an number
+            } else if(str[i] == '-' || str[i] == '+' || isdigit(str[i])) { // it's an number
                 char number[100];
                 memset(number, 0, 100);
                 int doublevalue = 0;
@@ -97,18 +98,21 @@ json_value* parse_value(const char* name,  const char* str, unsigned int begin, 
                     }
                     if(str[ix + i] == '-' || isdigit(str[ix + i]) || str[ix + i] == '.' || str[ix + i] == '+') {
                         number[ix] = str[ix + i];
-                    } else {
-                        //end reached or error
+                    } else if(str[ix + i] == ',' || str[ix + i] == '}' || str[ix + i] == ']' || str[ix + i] == ' ') {
+                        //end reached 
                         *end = ix + i + 1;
                         //try to parse
                         if(doublevalue == 1) {
                             //double
                             errno = 0;
-                            int num = strtof(number, NULL);
+                            double num = strtod(number, NULL);
                         
                             if(errno == 0) {
                                 json_value* val = json_value_create(name, &num, sizeof(double), JSON_FLOAT_NUMBER);
+                               
                                 return val;
+                            } else {
+                                return NULL;
                             }
                         } else {
                             //int todo long int
@@ -118,8 +122,13 @@ json_value* parse_value(const char* name,  const char* str, unsigned int begin, 
                             if(errno == 0) {
                                 json_value* val = json_value_create(name, &num, sizeof(int), JSON_NUMBER);
                                 return val;
+                            } else {
+                                return NULL;
                             }
                         }
+                    } else {
+                        //error
+                        return NULL;
                     }
                 }
             }

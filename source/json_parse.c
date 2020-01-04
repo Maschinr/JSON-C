@@ -4,7 +4,7 @@
 
 char* parse_string(unsigned int begin, const char* str, unsigned int* end) {
     const unsigned int str_length = strlen(str);
-   
+    
     for(unsigned int i = begin; i < str_length; i++) {
         if(str[i] != ' ') {
             if(str[i] == '\"') {
@@ -14,7 +14,7 @@ char* parse_string(unsigned int begin, const char* str, unsigned int* end) {
                 for(unsigned int ix = 0; ix < 100; ix++) {
                     if(str[i + ix] == '\"') { // string ended
                         *end = i + ix + 1;
-                        char* res = malloc(sizeof(char) * strlen(buffer) + 1);
+                        char* res = malloc(strlen(buffer) + 1);
                         if(res == NULL) {
                             return NULL;
                         }

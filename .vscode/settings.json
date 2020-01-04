@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "typeinfo": "cpp",
-        "json_value.h": "c"
+        "json_value.h": "c",
+        "stdlib.h": "c"
     }
 }
