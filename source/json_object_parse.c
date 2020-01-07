@@ -4,6 +4,7 @@
 #include <json_parse.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 /*Local Declarations*/
 typedef struct iterator_container_t {
@@ -117,6 +118,7 @@ int parse_object(unsigned int begin, const char* str, json_object* obj, unsigned
     }
     //now iterate over every value aslong as } is not reached
     for(position; position < str_length; position++) {
+        
         if(str[position] == '}') {
             //object ended
             break;
@@ -128,6 +130,7 @@ int parse_object(unsigned int begin, const char* str, json_object* obj, unsigned
         
         // Parse value('s)
         char* name = parse_string(position, str, end); // Get object name
+        
         if(name == NULL) {
             return 1;
         }

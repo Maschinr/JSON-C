@@ -334,6 +334,7 @@ int hashmap_iterate(map_t in, PFany f, any_t item) {
 
 	/* Linear probing */
 	for(i = 0; i< m->table_size; i++)
+        
 		if(m->data[i].in_use != 0) {
 			any_t data = (any_t) (m->data[i].data);
 			int status = f(item, data);

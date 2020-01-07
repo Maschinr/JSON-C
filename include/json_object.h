@@ -3,12 +3,14 @@
 #include <hashmap.h>
 
 typedef struct json_array_t json_array;
+typedef struct json_value_t json_value;
 typedef struct json_object_t {
     map_t map;
 } json_object;
 
 extern json_object* json_object_create(void);
 extern json_object* json_object_copy(json_object* object);
+extern void json_object_iterate(json_object* object, void (*func)(json_value* value));
 extern void json_object_free(json_object* object);
 
 extern int json_object_get_string(const json_object* object, const char* name, char** result);
@@ -48,16 +50,16 @@ extern int json_object_remove(json_object* object, const char* name);
     int: json_object_add_number,\
     double: json_object_add_float_number,\
     char*: json_object_add_string,\
-    json_object**: json_object_add_object,\
-    json_array**: json_object_add_array\
+    json_object*: json_object_add_object,\
+    json_array*: json_object_add_array\
 ) (object, name, value)
 
 #define json_object_insert(object, name, value) _Generic((value),\
     int: json_object_insert_number,\
     double: json_object_insert_float_number,\
     char*: json_object_insert_string,\
-    json_object**: json_object_insert_object,\
-    json_array**: json_object_insert_array\
+    json_object*: json_object_insert_object,\
+    json_array*: json_object_insert_array\
 ) (object, name, value)
 
 #define json_object_change(object, name, value) _Generic((value),\

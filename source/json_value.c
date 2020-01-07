@@ -19,6 +19,7 @@ json_value* json_value_create(const char* name, void* data, unsigned int data_si
     }
 
     result->type = type;
+    result->data_size = data_size;
     result->name = malloc(strlen(name) + 1);
 
     if(result->name == NULL) {
@@ -192,7 +193,7 @@ void* json_value_convert(json_value* value, json_value_type type) {
 
         case JSON_OBJECT: { // Convert to object
             if(value->type == JSON_OBJECT) {
-                return &value->value;
+                return value->value;
             } else {
                 return NULL;
             }

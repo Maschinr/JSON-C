@@ -14,8 +14,12 @@ typedef struct json_value_t {
     json_value_type type;
     void* value;
     char* name;
+    unsigned int data_size;
 } json_value;
 
+typedef struct json_object_t json_object;
+
+extern json_value* json_value_create_object(const char* name, json_object* data);
 extern json_value* json_value_create(const char* name, void* data, unsigned int data_size, json_value_type type);
 extern void json_value_free(json_value* value);
 

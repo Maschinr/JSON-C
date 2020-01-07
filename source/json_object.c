@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 /*Local Functions*/
 int free_hashmap_iterator(void* null, void* value) {
@@ -11,10 +12,29 @@ int free_hashmap_iterator(void* null, void* value) {
     return MAP_OK;
 }
 
-int copy_object_iterator(void* orig_object, void* value) {
-    json_object* object = (json_object*)orig_object;
+int copy_object_iterator(void* new_object, void* value) {
+    json_object* object = (json_object*)new_object;
     json_value* jvalue = (json_value*)value;
-    hashmap_put(object, jvalue->name, jvalue);
+
+    json_value* new_value = json_value_create(jvalue->name, jvalue->value, jvalue->data_size, jvalue->type);
+
+    if(object == NULL ||jvalue == NULL) {
+        return MAP_MISSING;
+    }
+    return hashmap_put(object->map, new_value->name, new_value);
+}
+
+int object_iterator_iterator(void* func, void* value) {
+    void(*funct)(json_value*) = func;
+    json_value* jvalue = (json_value*)value;
+
+    if(jvalue == NULL || funct == NULL) {
+        return MAP_MISSING;
+    }
+
+    funct(jvalue);
+
+    return MAP_OK;
 }
 /*Local Functions End*/
 
@@ -53,13 +73,22 @@ json_object* json_object_copy(json_object* object) {
         return NULL;
     }
 
-    if(hashmap_iterate(object, copy_object_iterator, object) != 0) {
+    if(hashmap_iterate(object->map, copy_object_iterator, result) != 0) {
+
         free(result);
         hashmap_free(result->map);
         return NULL;
     }
-
+    
     return result;
+}
+
+void json_object_iterate(json_object* object, void (*func)(json_value* value)) {
+    if (object == NULL || func == NULL) {
+        return;
+    }
+
+    hashmap_iterate(object->map, object_iterator_iterator, func);
 }
 
 void json_object_free(json_object* object) {
@@ -268,7 +297,7 @@ int json_object_get_object(const json_object* object, const char* name, json_obj
 
     tmp = json_value_convert(element, JSON_OBJECT);
     if(tmp != NULL) {
-        *result = *(json_object**)tmp;
+        *result = (json_object*)tmp;
         return 0;
     }
     return 1;
@@ -285,8 +314,7 @@ int json_object_add_object(json_object* object, const char* name, json_object* v
         return 1;
     }
 
-    element = json_value_create(name, value, sizeof(json_object), JSON_OBJECT);
-
+    element = json_value_create(name, value, sizeof(json_object*), JSON_OBJECT);
     if(element == NULL) {
         return 1;
     }
@@ -340,7 +368,7 @@ int json_object_add_array(json_object* object, const char* name, json_array* val
         return 1;
     }
 
-    element = json_value_create(name, value, sizeof(json_array), JSON_ARRAY);
+    element = json_value_create(name, value, sizeof(json_array*), JSON_ARRAY);
 
     if(element == NULL) {
         return 1;

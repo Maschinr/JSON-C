@@ -100,7 +100,7 @@ json_value* parse_value(const char* name,  const char* str, unsigned int begin, 
                         number[ix] = str[ix + i];
                     } else if(str[ix + i] == ',' || str[ix + i] == '}' || str[ix + i] == ']' || str[ix + i] == ' ') {
                         //end reached 
-                        *end = ix + i + 1;
+                        *end = ix + i;
                         //try to parse
                         if(doublevalue == 1) {
                             //double
