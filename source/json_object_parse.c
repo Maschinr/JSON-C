@@ -14,7 +14,6 @@ typedef struct iterator_container_t {
 
 int json_object_value_to_str_iterator(void* cont, void* val) {
     unsigned int size = 0;
-    printf("Object value to str %s\n", ((json_value*)val)->name);
     char* value_str = json_value_to_str((json_value*)val); // "name":value
     
     if(value_str == NULL) {
@@ -54,13 +53,13 @@ json_object* json_object_from_str(const char* str) {
 }
 
 char* json_object_to_str(const json_object* object) {
-    printf("Object\n");
     char* result;
     if(object == NULL) {
         return NULL;
     }
 
     if(hashmap_length(object->map) > 0) {
+
         result = malloc(sizeof(char) * 2); // {} the third for \0 will be set by hashmap_iterate
         if(result == NULL) {
             return NULL;

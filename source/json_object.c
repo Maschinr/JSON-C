@@ -358,7 +358,7 @@ int json_object_get_array(const json_object* object, const char* name, json_arra
 }
 
 int json_object_add_array(json_object* object, const char* name, json_array* value) {
- json_value* element;
+    json_value* element;
 
     if(name == NULL || object == NULL) {
         return 1;
