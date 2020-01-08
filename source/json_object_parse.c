@@ -14,8 +14,9 @@ typedef struct iterator_container_t {
 
 int json_object_value_to_str_iterator(void* cont, void* val) {
     unsigned int size = 0;
+    printf("Object value to str %s\n", ((json_value*)val)->name);
     char* value_str = json_value_to_str((json_value*)val); // "name":value
-
+    
     if(value_str == NULL) {
         return MAP_MISSING; // Error
     }
@@ -53,6 +54,7 @@ json_object* json_object_from_str(const char* str) {
 }
 
 char* json_object_to_str(const json_object* object) {
+    printf("Object\n");
     char* result;
     if(object == NULL) {
         return NULL;

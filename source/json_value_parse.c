@@ -26,7 +26,7 @@ char* json_value_to_str(json_value* value) {
 
     switch(value->type) {
         case JSON_OBJECT: {
-            value_str = json_object_to_str(*(json_object**)value->value);
+            value_str = json_object_to_str((json_object*)value->value);
             break;     
         }
         case JSON_STRING: {
