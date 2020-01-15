@@ -8,7 +8,7 @@
 json_value* json_value_create(const char* name, void* data, unsigned int data_size, json_value_type type) {
     json_value* result;
 
-    if(data == NULL ||name == NULL) {
+    if(data == NULL || name == NULL) {
         return NULL;
     }
 
@@ -75,9 +75,9 @@ void* json_value_convert(json_value* value, json_value_type type) {
     void* result;
 
     if (value == NULL) {
+        
         return NULL;
     }
-   
     result = NULL;
 
     switch(type) { // To convert to

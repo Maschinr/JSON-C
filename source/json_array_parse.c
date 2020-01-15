@@ -77,14 +77,14 @@ int parse_array(unsigned int begin, const char* str, json_array* arr, unsigned i
                 position = position + 1; // skip cur char
                 break;
             } else {
-                //invalid object
+                //invalid array
                 return 1;
             }
         }
     }
     //now iterate over every value aslong as } is not reached
     for(position; position < str_length; position++) {
-        
+        //printf("Iter atart %c\n", str[position]);
         if(str[position] == ']') {
             //object ended
             break;
@@ -95,17 +95,22 @@ int parse_array(unsigned int begin, const char* str, json_array* arr, unsigned i
         }
         
         // Parse value('s)
-        json_value* val = parse_value(NULL, str, position, end);
+        char name[30];
+        itoa(arr->size, name, 10);
+        json_value* val = parse_value(name, str, position, end);
         position = *end; 
-
+        printf("OUT\n");
         if(val == NULL) {
             return 1;
         }
+
         //Insert value into object
+        printf("AAAAAAAAAAADD %p %i\n", arr, *(int*)val->value);
         if(json_array_add_json_value(arr, val, -1) != 0) {
             json_value_free(val);
             return 1;
         }
+        printf("arr vall added %s\n", val->name);
     }
 
     return 0;

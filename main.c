@@ -60,19 +60,19 @@ int main(int argc, char** argv) {
     
     json_object_free(json);*/
 
-    json_array* arr = json_array_create();
-    printf("HEre\n");
-    json_array_add(arr, 10);
+    json_array* arr = json_array_from_str("[10,10.56,\"Hello world\",[30, 34]]");
+    if(arr == NULL) {
+        printf("Null\n");
+    }
+    /*json_array_add(arr, 10);
     json_array_add(arr, "Hello World");
     json_array_add(arr, 10.56);
     json_array_add(arr, arr);
-    printf("HEre2\n");
     json_array* arr2;
 
     json_array_get(arr, 3, &arr2);
-    printf("HEre3\n");
-    json_array_iterate(arr2, test3);
-    printf("HEre4\n");
+    json_array_iterate(arr2, test3);*/
+    printf("Iterate\n");
     json_array_iterate(arr, test3);
 
     json_array_free(arr);

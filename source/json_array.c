@@ -12,10 +12,8 @@ int json_array_add_value(json_array* array, void* data, unsigned int data_size, 
         itoa(index, name, 10);
     }
     
-    
     json_value* value = json_value_create(name, data, data_size, type);
-    printf("Add val %s\n", value->name);
-    return json_array_add_json_value(array, data, index);
+    return json_array_add_json_value(array, value, index);
 }
 /*Local Functions End*/
 
@@ -27,7 +25,6 @@ int json_array_add_json_value(json_array* array, json_value* value, int index) {
     if(index != -1 && index > array->size) {
         return 1;
     }
-
     if(array->size + 1 == array->memory_size) {
         void* tmp = realloc(array->values, sizeof(json_value*) * (array->memory_size + 10));
 
@@ -46,6 +43,7 @@ int json_array_add_json_value(json_array* array, json_value* value, int index) {
     } else {
         array->values[index] = value;
     }
+    return 0;
 }
 
 
@@ -93,13 +91,11 @@ void json_array_iterate(json_array* array, void (*func)(json_value* value)) {
 }
 
 json_array* json_array_copy(json_array* array) {
-    json_array* result;
-
     if(array == NULL) {
         return NULL;
     }
 
-    result = json_array_create();
+    json_array* result = json_array_create();
 
     if(result == NULL) {
         return NULL;
@@ -267,11 +263,11 @@ int json_array_get_array(const json_array* array, const unsigned int index, json
     }
 
     tmp = json_value_convert(array->values[index], JSON_ARRAY);
-
     if(tmp != NULL) {
         *result =  (json_array*)tmp;
         return 0;
     }
+    printf("NULL\n");
     return 1;
 }
 
@@ -279,7 +275,7 @@ int json_array_add_array(json_array* array, json_array* value) {
     if(array == NULL) {
         return 1;
     }
-    printf("Add array\n");
+
     return json_array_add_value(array, value, sizeof(json_array*), JSON_ARRAY, -1);
 }
 
