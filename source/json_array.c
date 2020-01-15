@@ -1,44 +1,52 @@
 #include <json_array.h>
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 /*Local Functions*/
-int json_array_add_value_index(json_array** array, void* data, unsigned int data_size, json_value_type type, unsigned int index) {
-    json_value* value;
+int json_array_add_value(json_array* array, void* data, unsigned int data_size, json_value_type type, int index) {
+    char name[30];
+    if(index == -1) {
+        itoa(array->size, name, 10);
+    } else {
+        itoa(index, name, 10);
+    }
     
-    if(array == NULL || *array == NULL) {
+    
+    json_value* value = json_value_create(name, data, data_size, type);
+    printf("Add val %s\n", value->name);
+    return json_array_add_json_value(array, data, index);
+}
+/*Local Functions End*/
+
+int json_array_add_json_value(json_array* array, json_value* value, int index) {
+    if(value == NULL || array == NULL) {
         return 1;
     }
 
-    value = json_value_create(NULL, data, data_size, type);
-
-    if(value == NULL) {
+    if(index != -1 && index > array->size) {
         return 1;
     }
 
-    if((*array)->size + 1 == (*array)->memory_size) {
-        void* tmp = realloc((*array)->values, sizeof(json_value*) * ((*array)->memory_size + 10));
+    if(array->size + 1 == array->memory_size) {
+        void* tmp = realloc(array->values, sizeof(json_value*) * (array->memory_size + 10));
 
         if(tmp == NULL) {
             return 1;
         }
 
-        *array = tmp;
+        array->values = tmp;
 
-        (*array)->memory_size = (*array)->memory_size + 10;
+        array->memory_size = array->memory_size + 10;
     }
-
-    (*array)->values[index] = value;
-
-    if(index == (*array)->size) {
-        (*array)->size = (*array)->size + 1;
+    
+    if(index == -1) {
+        array->values[array->size] = value;
+        array->size = array->size + 1;
+    } else {
+        array->values[index] = value;
     }
-    return 0;
 }
-
-int json_array_add_value(json_array** array, void* data, unsigned int data_size, json_value_type type) {
-    return json_array_add_value_index(array,data, data_size, type, (*array)->size);
-}
-/*Local Functions End*/
 
 
 json_array* json_array_create(void) {
@@ -63,6 +71,27 @@ json_array* json_array_create(void) {
     return result;
 }
 
+void json_array_free(json_array* array) {
+    if(array == NULL) {
+        return;
+    }
+
+    for(unsigned int i = 0; i < array->size; i++) {
+        json_value_free(array->values[i]);
+    }
+
+    free(array);
+}
+
+void json_array_iterate(json_array* array, void (*func)(json_value* value)) {
+    if(array == NULL || func == NULL) {
+        return;
+    }
+    for(int i = 0; i < array->size; i++) {
+        func(array->values[i]);
+    }
+}
+
 json_array* json_array_copy(json_array* array) {
     json_array* result;
 
@@ -77,24 +106,12 @@ json_array* json_array_copy(json_array* array) {
     }
 
     for(unsigned int i = 0; i < array->size; i++) {
-        if(json_array_add_value(&result, array->values[i]->value, array->values[i]->data_size, array->values[i]->type) != 0) {
+        if(json_array_add_value(result, array->values[i]->value, array->values[i]->data_size, array->values[i]->type, -1) != 0) {
             json_array_free(result);
             return NULL;
         }
     }
     return result;
-}
-
-void json_array_free(json_array* array) {
-    if(array == NULL) {
-        return;
-    }
-
-    for(unsigned int i = 0; i < array->size; i++) {
-        json_value_free(array->values[i]);
-    }
-
-    free(array);
 }
 
 int json_array_get_string(const json_array* array, const unsigned int index, char** result) {
@@ -118,25 +135,159 @@ int json_array_get_string(const json_array* array, const unsigned int index, cha
 }
 
 int json_array_add_string(json_array* array, char* value) {
-    json_value* element;
-
     if(array == NULL || value == NULL) {
         return 1;
     }
 
-    return json_array_add_value(&array, value, strlen(value) + 1, JSON_STRING);
+    return json_array_add_value(array, value, strlen(value) + 1, JSON_STRING, -1);
 }
 
-//TODO here
 int json_array_change_string(json_array* array, const unsigned int index, char* value) {
     if(array == NULL || value == NULL || index < array->size) {
         return 1;
     }
 
     json_array_remove(array, index);
-    return json_array_add_value_index(&array, value, strlen(value) + 1, JSON_STRING, index);
+    return json_array_add_value(array, value, strlen(value) + 1, JSON_STRING, index);
+}
+
+int json_array_get_number(const json_array* array, const unsigned int index, int* result) {
+    void* tmp;
+
+    if(array == NULL || result == NULL) {
+        return 1;
+    }
+
+    if(array->size < index) {
+        return 1;
+    }
+
+    tmp = json_value_convert(array->values[index], JSON_NUMBER);
+
+    if(tmp != NULL) {
+        *result = *(int*)tmp;
+        free(tmp);
+        return 0;
+    }
+    return 1;
+}
+
+int json_array_add_number(json_array* array, int value) {
+    if(array == NULL) {
+        return 1;
+    }
+
+    return json_array_add_value(array, &value, sizeof(int), JSON_NUMBER, -1);
+}
+
+int json_array_change_number(json_array* array, const unsigned int index, int value) {
+    if(array == NULL || index < array->size) {
+        return 1;
+    }
+
+    json_array_remove(array, index);
+    return json_array_add_value(array, &value, sizeof(int), JSON_NUMBER, index);
+}
+
+int json_array_get_float_number(const json_array* array, const unsigned int index, double* result) {
+    void* tmp;
+
+    if(array == NULL || result == NULL) {
+        return 1;
+    }
+
+    if(array->size < index) {
+        return 1;
+    }
+
+    tmp = json_value_convert(array->values[index], JSON_FLOAT_NUMBER);
+
+    if(tmp != NULL) {
+        *result = *(double*)tmp;
+        free(tmp);
+        return 0;
+    }
+    return 1;
+}
+
+int json_array_add_float_number(json_array* array, double value) {
+    if(array == NULL) {
+        return 1;
+    }
+
+    return json_array_add_value(array, &value, sizeof(double), JSON_FLOAT_NUMBER, -1);
+}
+
+int json_array_change_float_number(json_array* array, const unsigned int index, double value) {
+    if(array == NULL || index < array->size) {
+        return 1;
+    }
+
+    json_array_remove(array, index);
+    return json_array_add_value(array, &value, sizeof(double), JSON_FLOAT_NUMBER, index);
+}
+
+int json_array_get_object(const json_array* array, const unsigned int index, json_object** result) {
+    void* tmp;
+
+    if(array == NULL || result == NULL || result == NULL) {
+        return 1;
+    }
+
+    if(array->size < index) {
+        return 1;
+    }
+
+    tmp = json_value_convert(array->values[index], JSON_OBJECT);
+
+    if(tmp != NULL) {
+        *result = tmp;
+        return 0;
+    }
+    return 1;
+}
+
+int json_array_add_object(json_array* array, json_object* value) {
+    if(array == NULL) {
+        return 1;
+    }
+
+    return json_array_add_value(array, value, sizeof(json_object*), JSON_OBJECT, -1);
+}
+
+int json_array_get_array(const json_array* array, const unsigned int index, json_array** result) {
+    void* tmp;
+
+    if(array == NULL || result == NULL || result == NULL) {
+        return 1;
+    }
+
+    if(array->size < index) {
+        return 1;
+    }
+
+    tmp = json_value_convert(array->values[index], JSON_ARRAY);
+
+    if(tmp != NULL) {
+        *result =  (json_array*)tmp;
+        return 0;
+    }
+    return 1;
+}
+
+int json_array_add_array(json_array* array, json_array* value) {
+    if(array == NULL) {
+        return 1;
+    }
+    printf("Add array\n");
+    return json_array_add_value(array, value, sizeof(json_array*), JSON_ARRAY, -1);
 }
 
 void json_array_remove(json_array* array, const unsigned int index) {
+    if(array == NULL || index > array->size) {
+        return;
+    }
 
+    json_value_free(array->values[index]);
+    array->values[index] = NULL;
 }

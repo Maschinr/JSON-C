@@ -3,11 +3,13 @@
 #include <json.h>
 
 void test3(json_value* val) {
-    printf("Inside: %s\n", val->name);
+    char* val_str = json_value_convert(val, JSON_STRING);
+    printf("Inside: %s %s\n", val->name, val_str);
+    free(val_str);
 }
 
 int main(int argc, char** argv) {
-    json_object* json = json_object_from_str("{\
+    /*json_object* json = json_object_from_str("{\
                                                 \"String\": \"String\",\
                                                 \"Number:\": 35,\
                                                 \"Floating\": 36.9\
@@ -56,7 +58,24 @@ int main(int argc, char** argv) {
     printf("Result: %s\n", result);
     free(result);
     
-    json_object_free(json);
+    json_object_free(json);*/
+
+    json_array* arr = json_array_create();
+    printf("HEre\n");
+    json_array_add(arr, 10);
+    json_array_add(arr, "Hello World");
+    json_array_add(arr, 10.56);
+    json_array_add(arr, arr);
+    printf("HEre2\n");
+    json_array* arr2;
+
+    json_array_get(arr, 3, &arr2);
+    printf("HEre3\n");
+    json_array_iterate(arr2, test3);
+    printf("HEre4\n");
+    json_array_iterate(arr, test3);
+
+    json_array_free(arr);
 
     return 0;
 }
