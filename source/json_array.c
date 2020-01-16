@@ -7,9 +7,9 @@
 int json_array_add_value(json_array* array, void* data, unsigned int data_size, json_value_type type, int index) {
     char name[30];
     if(index == -1) {
-        itoa(array->size, name, 10);
+        sprintf(name, "%i", array->size);
     } else {
-        itoa(index, name, 10);
+        sprintf(name, "%i", index);
     }
     
     json_value* value = json_value_create(name, data, data_size, type);

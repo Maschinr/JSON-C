@@ -94,7 +94,7 @@ int parse_array(unsigned int begin, const char* str, json_array* arr, unsigned i
         
         // Parse value('s)
         char name[30];
-        itoa(arr->size, name, 10);
+        sprintf(name, "%i", arr->size);
 
         json_value* val = parse_value(name, str, position, end);
         position = *end; 
