@@ -9,7 +9,7 @@ void test3(json_value* val) {
 }
 
 int main(int argc, char** argv) {
-    json_object* json = json_object_from_str("{\
+    /*json_object* json = json_object_from_str("{\
                                                 \"String\": \"String\",\
                                                 \"Number:\": 35,\
                                                 \"Floating\": 36.9\
@@ -58,20 +58,24 @@ int main(int argc, char** argv) {
     printf("Result: %s\n", result);
     free(result);
     
-    json_object_free(json);
+    json_object_free(json);*/
 
-    json_array* arr = json_array_from_str("[{\"Num\":20.45}]");
+    json_array* arr = json_array_from_str("[{\"Num\":20.45}, 10, 20.56, \"HALlo\", [10]]");
     if(arr == NULL) {
         printf("Null\n");
     }
     printf("Array:\n");
     json_array_iterate(arr, test3);
+    char* txt = json_array_to_str(arr);
+    printf("Array: %s\n", txt);
+    free(txt);
     json_array_free(arr);
 
-    json_object* obj = json_object_from_str("{\"Array\": [10, \"Hello\"]}");
+    json_object* obj = json_object_from_file("object.json");
     printf("Object:\n");
     json_object_iterate(obj, test3);
     json_object_free(obj);
+
 
     return 0;
 }

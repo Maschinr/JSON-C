@@ -52,6 +52,23 @@ json_object* json_object_from_str(const char* str) {
     return result;
 }
 
+json_object* json_object_from_file(const char* path) {
+    FILE *file = fopen(path, "rb");
+    fseek(file, 0, SEEK_END);
+    long fsize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    char *string = malloc(fsize + 1);
+    if(string == NULL) {
+        return NULL;
+    }
+    fread(string, 1, fsize, file);
+    fclose(file);
+    string[fsize] = 0;
+
+    return json_object_from_str(string);
+}
+
 char* json_object_to_str(const json_object* object) {
     char* result;
     if(object == NULL) {

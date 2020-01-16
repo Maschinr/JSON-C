@@ -10,24 +10,19 @@
 #include <stdio.h>
 
 char* json_value_to_str(json_value* value, int with_name) {
-    char* result;
-    char* value_str;
-    unsigned int size;
-
     if(value == NULL) {
         return NULL;
     }
 
-    if(value->name != NULL && with_name != 0) {
-        size = 3 + strlen(value->name);
-    }
-    
-    result = NULL;
-    value_str = NULL;
+    char* value_str;
 
     switch(value->type) {
         case JSON_OBJECT: {
             value_str = json_object_to_str((json_object*)value->value);
+            break;     
+        }
+        case JSON_ARRAY: {
+            value_str = json_array_to_str((json_array*)value->value);
             break;     
         }
         case JSON_STRING: {
@@ -50,21 +45,25 @@ char* json_value_to_str(json_value* value, int with_name) {
         }
     }
     
-    size = size + strlen(value_str);
-    
-    result = malloc(size + 1);
-    if(result == NULL) {
-        return NULL;
-    }
-
     if(value->name != NULL && with_name != 0) {
+        unsigned int size = 4 + strlen(value->name) + strlen(value_str);
+
+        char* result = malloc(size);
+        if(result == NULL) {
+            return NULL;
+        }
+
         strcpy(result, "\"");
         strcat(result, value->name);
         strcat(result, "\":");
+        
+
+        strcat(result, value_str);
+        free(value_str);
+        return result;
+    } else {
+        return value_str;
     }
-    strcat(result, value_str);
-    free(value_str);
-    return result;
 }
 
 //TODO review this function
