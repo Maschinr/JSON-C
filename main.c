@@ -9,7 +9,7 @@ void test3(json_value* val) {
 }
 
 int main(int argc, char** argv) {
-    /*json_object* json = json_object_from_str("{\
+    json_object* json = json_object_from_str("{\
                                                 \"String\": \"String\",\
                                                 \"Number:\": 35,\
                                                 \"Floating\": 36.9\
@@ -58,24 +58,20 @@ int main(int argc, char** argv) {
     printf("Result: %s\n", result);
     free(result);
     
-    json_object_free(json);*/
+    json_object_free(json);
 
-    json_array* arr = json_array_from_str("[10,10.56,\"Hello world\",[30, 34]]");
+    json_array* arr = json_array_from_str("[{\"Num\":20.45}]");
     if(arr == NULL) {
         printf("Null\n");
     }
-    /*json_array_add(arr, 10);
-    json_array_add(arr, "Hello World");
-    json_array_add(arr, 10.56);
-    json_array_add(arr, arr);
-    json_array* arr2;
-
-    json_array_get(arr, 3, &arr2);
-    json_array_iterate(arr2, test3);*/
-    printf("Iterate\n");
+    printf("Array:\n");
     json_array_iterate(arr, test3);
-
     json_array_free(arr);
+
+    json_object* obj = json_object_from_str("{\"Array\": [10, \"Hello\"]}");
+    printf("Object:\n");
+    json_object_iterate(obj, test3);
+    json_object_free(obj);
 
     return 0;
 }

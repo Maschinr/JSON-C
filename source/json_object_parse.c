@@ -14,7 +14,7 @@ typedef struct iterator_container_t {
 
 int json_object_value_to_str_iterator(void* cont, void* val) {
     unsigned int size = 0;
-    char* value_str = json_value_to_str((json_value*)val); // "name":value
+    char* value_str = json_value_to_str((json_value*)val, 1); // "name":value
     
     if(value_str == NULL) {
         return MAP_MISSING; // Error
@@ -118,8 +118,8 @@ int parse_object(unsigned int begin, const char* str, json_object* obj, unsigned
         }
     }
     //now iterate over every value aslong as } is not reached
+    int first = 0;
     for(position; position < str_length; position++) {
-        
         if(str[position] == '}') {
             //object ended
             break;
@@ -128,14 +128,40 @@ int parse_object(unsigned int begin, const char* str, json_object* obj, unsigned
         if(str[position] == ' ') {
             continue;
         }
-        
+
+        if(first != 0) {
+            for(position; position < str_length; position++) {
+            if(str[position] == ' ') {
+                continue;
+            } else if(str[position == ',']) {
+                position = position + 1;
+                break;
+            } else {
+                return 1;
+            }
+        }
+        }
+
         // Parse value('s)
         char* name = parse_string(position, str, end); // Get object name
-        
         if(name == NULL) {
+            printf("Name err\n");
             return 1;
         }
         position = *end;
+
+        //Next char should be :
+        for(position; position < str_length; position++) {
+            if(str[position] == ' ') {
+                continue;
+            } else if(str[position == ':']) {
+                position = position + 1;
+                break;
+            } else {
+                free(name);
+                return 1;
+            }
+        }
         json_value* val = parse_value(name, str, position, end);
         free(name);
         position = *end; 
@@ -153,7 +179,12 @@ int parse_object(unsigned int begin, const char* str, json_object* obj, unsigned
             json_value_free(val);
             return 1;
         }
+
+        position -= 1; // so that next loop doesn't skip a letter
+        first += 1;
     }
+
+    *end = position + 1;
 
     return 0;
 }

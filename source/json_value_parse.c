@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <stdio.h>
 
-char* json_value_to_str(json_value* value) {
+char* json_value_to_str(json_value* value, int with_name) {
     char* result;
     char* value_str;
     unsigned int size;
@@ -18,7 +18,7 @@ char* json_value_to_str(json_value* value) {
         return NULL;
     }
 
-    if(value->name != NULL) {
+    if(value->name != NULL && with_name != 0) {
         size = 3 + strlen(value->name);
     }
     
@@ -57,7 +57,7 @@ char* json_value_to_str(json_value* value) {
         return NULL;
     }
 
-    if(value->name != NULL) {
+    if(value->name != NULL && with_name != 0) {
         strcpy(result, "\"");
         strcat(result, value->name);
         strcat(result, "\":");
@@ -70,11 +70,9 @@ char* json_value_to_str(json_value* value) {
 //TODO review this function
 json_value* parse_value(const char* name,  const char* str, unsigned int begin, unsigned int* end) {
     const unsigned int str_length = strlen(str);
-    printf("Parse start\n");
     for(unsigned int i = begin; i < str_length; i++) {
         if(str[i] != ' ') {
             //Check which type of value it is
-            printf("Parse %c\n", str[i]);
             if(str[i] == '{') { // it's an object
                 json_object* obj = json_object_create();
                 if(parse_object(i, str, obj, end) != 0) {
@@ -88,7 +86,8 @@ json_value* parse_value(const char* name,  const char* str, unsigned int begin, 
                 if(parse_array(i, str, arr, end) != 0) {
                     return NULL;
                 }
-                json_value* val = json_value_create(name, arr, sizeof(json_array*), JSON_OBJECT);
+                
+                json_value* val = json_value_create(name, arr, sizeof(json_array*), JSON_ARRAY);
                 json_array_free(arr);
                 return val;
             } else if(str[i] == '\"') { // it's an string
@@ -118,7 +117,6 @@ json_value* parse_value(const char* name,  const char* str, unsigned int begin, 
                         
                             if(errno == 0) {
                                 json_value* val = json_value_create(name, &num, sizeof(double), JSON_FLOAT_NUMBER);
-                               
                                 return val;
                             } else {
                                 return NULL;

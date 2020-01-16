@@ -267,7 +267,6 @@ int json_array_get_array(const json_array* array, const unsigned int index, json
         *result =  (json_array*)tmp;
         return 0;
     }
-    printf("NULL\n");
     return 1;
 }
 

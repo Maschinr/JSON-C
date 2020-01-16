@@ -1,6 +1,7 @@
 #include <json_parse.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 char* parse_string(unsigned int begin, const char* str, unsigned int* end) {
     const unsigned int str_length = strlen(str);

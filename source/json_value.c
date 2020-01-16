@@ -36,7 +36,7 @@ json_value* json_value_create(const char* name, void* data, unsigned int data_si
         free(result);
         return NULL;
     }
-
+    
     if(type == JSON_OBJECT) {
         result->value = json_object_copy(data);
     } else if(type == JSON_ARRAY) {
@@ -45,7 +45,7 @@ json_value* json_value_create(const char* name, void* data, unsigned int data_si
         memcpy(result->value, data, data_size);
         
     }
-
+    
     if(result->value == NULL) {
         free(result);
         return NULL;
